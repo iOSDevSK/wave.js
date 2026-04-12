@@ -183,7 +183,7 @@ void main() {
       alpha *= 0.75;
     }
 
-    // Liquid metal effect (MetalFlow-inspired)
+    // Liquid metal effect: smooth 3D chrome with iridescent tint
     if (u_liquidMetal > 0.5) {
       float mDist = uv.y - waveY;
       float absDist = abs(mDist);
@@ -193,85 +193,67 @@ void main() {
       // Edge softness
       float edgeMask = smoothstep(1.0, 1.0 - u_lmEdge * 0.5, normDist);
 
-      // Chrome base colors (MetalFlow: near-white and near-black)
-      vec3 chromeLight = vec3(0.98, 0.98, 1.0);
-      vec3 chromeDark = vec3(0.1, 0.1, 0.12);
-
-      // Wave slope for bulge
-      float dx = cos(uv.x * aspect * u_frequency + t * (0.8 + fi * 0.1) + phase) * amp;
-      float bulge = clamp(1.0 - normDist * 1.2, 0.0, 1.0);
-
-      // Simplex noise for liquid flow
+      // Surface "normal" from wave slope and distance
       float lmT = u_time * u_lmSpeed;
-      float noise = snoise(vec2(uv.x * aspect * 2.0 + fi * 1.5, waveY * 6.0) - lmT * 0.7);
-      float noise2 = snoise(vec2(uv.x * aspect * 4.0 - fi * 0.7, waveY * 10.0) + lmT * 0.5);
+      float dx = cos(uv.x * aspect * u_frequency + t * (0.8 + fi * 0.1) + phase) * amp;
+      float slope = dx * u_lmPatternScale;
 
-      // Liquify: noise distorts the edge detection
-      float liquidEdge = normDist + (1.0 - normDist) * u_lmLiquid * noise;
+      // Simplex noise for organic liquid distortion
+      float n1 = snoise(vec2(uv.x * aspect * 1.5 + fi, waveY * 4.0) - lmT * 0.5);
+      float n2 = snoise(vec2(uv.x * aspect * 3.0 - fi * 0.5, waveY * 8.0) + lmT * 0.3);
+      float n3 = snoise(vec2(uv.x * aspect * 0.8 + fi * 2.0, uv.y * 3.0) - lmT * 0.2);
 
-      // Stripe direction along wave
-      float diagonal = uv.x * aspect - uv.y;
-      float dir = diagonal + dx * 3.0 + waveY * 2.0;
-      dir += noise * u_lmLiquid * 3.0 * bulge;
-      dir -= lmT;
-      dir *= (0.1 + (1.1 - liquidEdge) * bulge);
-      dir *= u_lmPatternScale * 0.4;
+      // Liquid distortion of surface normal
+      float liquidSlope = slope + n1 * u_lmLiquid * 4.0 + n2 * u_lmLiquid * 2.0;
+      float liquidDist = normDist + n3 * u_lmLiquid * 0.5;
+      liquidDist = clamp(liquidDist, 0.0, 1.0);
 
-      // Pattern cycle
-      float cycleWidth = 1.0;
-      float thinStrip1 = 0.12 / cycleWidth * (1.0 - 0.4 * bulge);
-      float thinStrip2 = 0.07 / cycleWidth * (1.0 + 0.4 * bulge);
-      float wideStrip = 1.0 - thinStrip1 - thinStrip2;
-      float pb = u_lmPatternBlur * 16.0 + 0.01;
+      // Fake environment reflection: smooth gradient based on "reflected" angle
+      float envAngle = liquidSlope * 0.3 + mDist / bandWidth * 0.5 + n1 * u_lmPatternBlur * 8.0;
+      envAngle = envAngle * 0.5 + 0.5; // normalize to 0-1
+      envAngle = clamp(envAngle, 0.0, 1.0);
 
-      // Chromatic aberration per channel
-      float refrR = u_lmRefraction * 33.0 * (1.0 - bulge + 0.03 * bulge * noise);
-      float refrB = u_lmRefraction * 43.0;
+      // Smooth environment: dark -> mid -> bright -> mid
+      float envCurve = sin(envAngle * 3.14159) ;
+      float envBright = pow(envCurve, 0.6 + u_lmPatternBlur * 10.0);
 
-      float stripe_r = mod(dir + refrR, cycleWidth);
-      float stripe_g = mod(dir, cycleWidth);
-      float stripe_b = mod(dir - refrB, cycleWidth);
+      // Base chrome from environment
+      vec3 metalColor = mix(vec3(0.02, 0.02, 0.03), vec3(0.95, 0.93, 0.98), envBright);
 
-      // MetalFlow-style multi-band stripe blending
-      float w1 = thinStrip1;
-      float w12 = thinStrip1 + thinStrip2;
+      // Iridescent color tint from wave color
+      vec3 tint = waveColor * 1.2 + vec3(0.1);
+      // Shift tint hue based on angle for iridescence
+      float hueShift = envAngle * 0.5 + liquidSlope * 0.2;
+      vec3 iridescentTint = mix(tint, tint.gbr, smoothstep(0.3, 0.7, hueShift));
+      metalColor = mix(metalColor, metalColor * iridescentTint, 0.5 + envBright * 0.3);
 
-      float r = mix(chromeDark.r, chromeLight.r, smoothstep(0.0, pb, stripe_r));
-      r = mix(r, chromeDark.r, smoothstep(w1 - pb, w1 + pb, stripe_r));
-      r = mix(r, chromeLight.r, smoothstep(w12 - pb, w12 + pb, stripe_r));
-      float gradR = mix(chromeLight.r, chromeDark.r, smoothstep(0.0, 1.0, (stripe_r - w12) / wideStrip));
-      r = mix(r, gradR, smoothstep(w12 - pb, w12 + pb, stripe_r));
+      // Chromatic aberration on edges
+      float refrOffset = u_lmRefraction * 30.0 * (1.0 - envBright);
+      float envR = sin((envAngle + refrOffset) * 3.14159);
+      float envB = sin((envAngle - refrOffset * 1.3) * 3.14159);
+      metalColor.r = mix(metalColor.r, pow(max(0.0, envR), 0.6) * 0.9, refrOffset * 2.0);
+      metalColor.b = mix(metalColor.b, pow(max(0.0, envB), 0.6) * 0.9, refrOffset * 2.0);
 
-      float g = mix(chromeDark.g, chromeLight.g, smoothstep(0.0, pb, stripe_g));
-      g = mix(g, chromeDark.g, smoothstep(w1 - pb, w1 + pb, stripe_g));
-      g = mix(g, chromeLight.g, smoothstep(w12 - pb, w12 + pb, stripe_g));
-      float gradG = mix(chromeLight.g, chromeDark.g, smoothstep(0.0, 1.0, (stripe_g - w12) / wideStrip));
-      g = mix(g, gradG, smoothstep(w12 - pb, w12 + pb, stripe_g));
+      // Broad specular highlight on crest
+      float spec = pow(max(0.0, 1.0 - liquidDist * 2.5), 3.0);
+      metalColor += vec3(0.95, 0.9, 1.0) * spec * 0.4;
 
-      float b = mix(chromeDark.b, chromeLight.b, smoothstep(0.0, pb, stripe_b));
-      b = mix(b, chromeDark.b, smoothstep(w1 - pb, w1 + pb, stripe_b));
-      b = mix(b, chromeLight.b, smoothstep(w12 - pb, w12 + pb, stripe_b));
-      float gradB = mix(chromeLight.b, chromeDark.b, smoothstep(0.0, 1.0, (stripe_b - w12) / wideStrip));
-      b = mix(b, gradB, smoothstep(w12 - pb, w12 + pb, stripe_b));
+      // Secondary softer highlight
+      float spec2 = pow(max(0.0, 1.0 - abs(liquidDist - 0.3) * 4.0), 2.0);
+      metalColor += vec3(0.8, 0.75, 0.9) * spec2 * 0.15;
 
-      vec3 metalColor = vec3(r, g, b);
+      // Fresnel: bright rim on wave edges
+      float fresnel = pow(liquidDist, 0.4) * pow(1.0 - liquidDist, 0.8);
+      metalColor += vec3(0.9, 0.85, 1.0) * fresnel * 0.5;
 
-      // Tint chrome with wave color (subtle)
-      metalColor = mix(metalColor, metalColor * (waveColor * 1.5 + vec3(0.3)), 0.35);
+      // Depth: upper part brighter (like light from above)
+      float depth = smoothstep(-bandWidth * 0.5, bandWidth * 0.5, mDist);
+      metalColor *= 0.6 + depth * 0.6;
 
-      // Depth gradient
-      float depthGrad = smoothstep(-bandWidth, bandWidth, mDist);
-      metalColor = mix(metalColor * 0.75, metalColor * 1.15, depthGrad);
+      // Contrast boost
+      metalColor = pow(metalColor, vec3(0.9));
 
-      // Fresnel edge glow
-      float fresnel = pow(normDist, 0.5) * (1.0 - normDist);
-      metalColor += chromeLight * fresnel * 0.25;
-
-      // Specular on crest
-      float spec = pow(max(0.0, 1.0 - normDist * 4.0), 5.0);
-      metalColor += vec3(spec * 0.12);
-
-      // Apply edge softness
+      // Apply with edge softness
       waveColor = mix(waveColor, metalColor, edgeMask);
     }
 
