@@ -29,6 +29,7 @@ uniform float u_randomness;
 uniform float u_thicknessRandom;
 uniform float u_verticalOffset;
 uniform float u_splitFill;
+uniform float u_glass;
 uniform float u_liquidMetal;
 
 varying vec2 v_uv;
@@ -118,6 +119,32 @@ void main() {
     // Subtle brightness shimmer along wave
     float brightness = 0.95 + 0.1 * sin(uv.x * aspect * 3.0 + t * 0.5 + fi);
     waveColor *= brightness;
+
+    // Glass effect: transparency, refraction, caustic highlights, soft edges
+    if (u_glass > 0.5) {
+      float gDistFromWave = uv.y - waveY;
+      float gAbsDist = abs(gDistFromWave);
+      float gBandWidth = thick + u_blur + 0.02;
+
+      waveColor = mix(waveColor, color, 0.4);
+
+      float gDx = cos(uv.x * aspect * u_frequency + t * (0.8 + fi * 0.1) + phase) * amp;
+      float refractedY = uv.y + gDx * 0.1;
+      float refractTint = smoothstep(0.3, 0.7, refractedY);
+      waveColor = mix(waveColor, waveColor * (0.8 + refractTint * 0.4), 0.5);
+
+      float caustic1 = sin(uv.x * aspect * u_frequency * 3.0 + t * 1.2 + phase * 2.0) * 0.5 + 0.5;
+      float caustic2 = sin(uv.x * aspect * u_frequency * 5.0 - t * 0.8 + phase * 3.0) * 0.5 + 0.5;
+      float gNearCenter = 1.0 - smoothstep(0.0, gBandWidth * 0.6, gAbsDist);
+      waveColor += vec3(pow(caustic1 * caustic2, 2.0) * gNearCenter * 0.15);
+
+      float gEdge = smoothstep(0.0, gBandWidth, gAbsDist);
+      waveColor += vec3(pow(gEdge, 0.8) * (1.0 - gEdge) * 0.25);
+
+      waveColor += vec3(pow(max(0.0, 1.0 - gAbsDist / (gBandWidth * 0.15)), 6.0) * 0.12);
+
+      alpha *= 0.75;
+    }
 
     // Liquid metal effect: chrome reflections, Fresnel, noise distortion, depth gradient
     if (u_liquidMetal > 0.5) {
