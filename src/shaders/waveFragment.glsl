@@ -119,27 +119,32 @@ void main() {
     float brightness = 0.95 + 0.1 * sin(uv.x * aspect * 3.0 + t * 0.5 + fi);
     waveColor *= brightness;
 
-    // Metallic effect: specular highlights from wave surface slope
+    // Metallic effect: horizontal specular highlights along wave crests
     if (u_metallic > 0.5) {
-      // Compute wave derivative (surface slope)
-      float dx = 0.0;
-      dx += cos(uv.x * aspect * u_frequency + t * (0.8 + fi * 0.1) + phase) * amp * u_frequency * aspect;
-      dx += cos(uv.x * aspect * u_frequency * 2.0 - t * (0.5 + fi * 0.15) + phase * 2.0) * amp * 0.4 * u_frequency * 2.0 * aspect;
-      dx += cos(uv.x * aspect * u_frequency * 0.5 + t * (0.3 + fi * 0.05) + phase * 3.0) * amp * 0.6 * u_frequency * 0.5 * aspect;
+      float distFromWave = uv.y - waveY;
+      float absDist = abs(distFromWave);
+      float bandWidth = thick + u_blur + 0.02;
 
-      // Specular highlight from slope (like light reflecting off surface)
-      float specular = pow(max(0.0, 1.0 - abs(dx) * 1.5), 8.0);
+      // Sharp horizontal highlight at wave center line
+      float centerLine = 1.0 - smoothstep(0.0, bandWidth * 0.3, absDist);
+      float specular = pow(centerLine, 4.0);
 
-      // Fresnel-like rim glow based on distance from wave center
-      float distFromWave = abs(uv.y - waveY);
-      float rimWidth = thick + u_blur * 0.5;
-      float rim = smoothstep(rimWidth, 0.0, distFromWave);
-      float fresnel = pow(1.0 - rim, 3.0) * rim * 4.0;
+      // Secondary highlight slightly offset (like chrome double-reflection)
+      float secondaryLine = 1.0 - smoothstep(bandWidth * 0.2, bandWidth * 0.5, absDist);
+      float secondary = pow(secondaryLine, 2.0) * 0.3;
 
-      // Apply metallic: brighten highlights, darken shadows, add specular
-      vec3 highlight = mix(waveColor, vec3(1.0), 0.7);
-      waveColor = mix(waveColor * 0.7, highlight, specular * 0.6 + fresnel * 0.3);
-      waveColor += vec3(specular * 0.25);
+      // Environment reflection: fake gradient mapped to wave surface position
+      float envReflect = smoothstep(-bandWidth, bandWidth, distFromWave);
+      vec3 envColor = mix(waveColor * 0.4, waveColor * 1.4 + vec3(0.15), envReflect);
+
+      // Subtle horizontal variation from wave slope for organic feel
+      float dx = cos(uv.x * aspect * u_frequency + t * (0.8 + fi * 0.1) + phase) * amp;
+      float slopeVar = 0.85 + 0.15 * dx / max(amp, 0.001);
+
+      // Combine: environment base + specular highlights
+      vec3 highlight = mix(waveColor, vec3(1.0), 0.6);
+      waveColor = mix(envColor, highlight, specular * 0.7 + secondary) * slopeVar;
+      waveColor += vec3(specular * 0.2);
     }
 
     color = mix(color, waveColor, alpha * colorAlpha);
