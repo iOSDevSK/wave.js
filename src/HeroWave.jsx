@@ -20,6 +20,7 @@ const DEFAULTS = {
   opacity: 0.6,
   thickness: 0.06,
   blur: 0.03,
+  concentration: 0,
 }
 
 function getTimeOfDay() {
@@ -40,6 +41,7 @@ const SLIDER_DEFS = [
   { key: 'opacity',   label: 'Opacity', min: 0, max: 1, step: 0.01 },
   { key: 'thickness', label: 'Thickness', min: 0.01, max: 0.2, step: 0.001 },
   { key: 'blur',      label: 'Blur', min: 0, max: 0.3, step: 0.001 },
+  { key: 'concentration', label: 'Concentration', min: 0, max: 10, step: 0.1 },
 ]
 
 // --- Color helpers ---

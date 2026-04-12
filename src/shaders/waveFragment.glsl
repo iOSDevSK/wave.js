@@ -24,6 +24,7 @@ uniform float u_frequency;
 uniform float u_opacity;
 uniform float u_thickness;
 uniform float u_blur;
+uniform float u_concentration;
 
 varying vec2 v_uv;
 
@@ -38,8 +39,12 @@ void main() {
 
   int waveCount = int(u_waveCount);
 
-  // Start with background color (blend toward black based on its opacity)
-  vec3 color = u_color1 * u_colorOpacity1;
+  // Background color (not affected by per-color opacity)
+  vec3 color = u_color1;
+
+  // Wave distribution range — shrinks toward center with concentration
+  float range = 0.85 / (1.0 + u_concentration);
+  float startY = 0.5 - range / 2.0;
 
   // Draw waves from back to front
   for (int i = 0; i < 20; i++) {
@@ -48,9 +53,8 @@ void main() {
     float fi = float(i);
     float phase = fi * 0.7 + u_seed;
 
-    // Base Y — distribute evenly across screen
-    float spacing = 0.85 / max(float(waveCount), 1.0);
-    float baseY = 0.08 + fi * spacing;
+    // Base Y — distribute across screen, concentrated toward center
+    float baseY = startY + fi / max(float(waveCount) - 1.0, 1.0) * range;
 
     // Classic sine wave with layered harmonics
     float wave = 0.0;
@@ -63,9 +67,11 @@ void main() {
 
     float waveY = baseY + wave;
 
-    // Smooth fill below wave line — blur widens the soft edge
+    // Symmetric band around wave position
     float edgeWidth = u_thickness + u_blur;
-    float edge = smoothstep(waveY - edgeWidth, waveY, uv.y);
+    float halfExtent = range * 0.5 + edgeWidth;
+    float dist = abs(uv.y - waveY);
+    float edge = 1.0 - smoothstep(halfExtent - edgeWidth, halfExtent, dist);
 
     // Per-wave opacity — back waves more transparent, front more opaque
     float layerAlpha = u_opacity * (0.25 + 0.75 * (fi / max(float(waveCount) - 1.0, 1.0)));

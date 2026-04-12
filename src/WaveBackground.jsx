@@ -28,6 +28,7 @@ export default function WaveBackground({ colors, colorOpacities, mouse, params }
     u_opacity: { value: params.opacity },
     u_thickness: { value: params.thickness },
     u_blur: { value: params.blur },
+    u_concentration: { value: params.concentration },
   }), [])
 
   // Animate color transitions
@@ -74,6 +75,7 @@ export default function WaveBackground({ colors, colorOpacities, mouse, params }
     uniforms.u_opacity.value = params.opacity
     uniforms.u_thickness.value = params.thickness
     uniforms.u_blur.value = params.blur
+    uniforms.u_concentration.value = params.concentration
     uniforms.u_colorOpacity1.value = colorOpacities[0]
     uniforms.u_colorOpacity2.value = colorOpacities[1]
     uniforms.u_colorOpacity3.value = colorOpacities[2]
