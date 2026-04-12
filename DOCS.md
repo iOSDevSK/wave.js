@@ -108,6 +108,7 @@ All parameters are adjustable at runtime through the built-in control panel (top
 |-----------|-----|---------|-----|-----|------|-------------|
 | **Concentration** | `concentration` | `0` | 0 | 50 | 0.1 | Compresses wave distribution toward the vertical center. The wave range is calculated as `0.85 / (1 + concentration)`. At 0, waves span ~85% of screen height. At 50, waves occupy a narrow ~1.7% strip at the center. |
 | **Randomness** | `randomness` | `0` | 0 | 1 | 0.01 | Per-wave amplitude variation. Each wave gets a stable pseudo-random factor. The actual amplitude per wave is: `amplitude * (1 - randomness + randomness * random)` where `random` is 0–1 per wave. At 0, all waves are identical. At 1, waves range from 0 to full amplitude. |
+| **Vertical Offset** | `verticalOffset` | `0` | -0.5 | 0.5 | 0.01 | Shifts the entire wave group up or down from the screen center. At 0, waves are centered vertically. Positive values move waves up, negative values move them down. Works independently of and combines with Concentration. |
 
 ---
 
@@ -156,7 +157,7 @@ Click any swatch to open the picker popover:
 | **B input** | Blue channel (0–255) |
 | **A input** | Alpha / opacity (0–100%) |
 
-Changing any color value automatically switches the active theme to `"custom"`. Custom colors are stored in React state and persist during the session.
+Changing any color value automatically switches the active theme to `"custom"`. Custom colors are stored in React state and persist during the session. The auto time-of-day timer will not override a custom theme — once you pick custom colors, they stay until you manually select a different theme or reset.
 
 ### Per-Color Opacity
 
@@ -232,6 +233,7 @@ Complete list of uniforms passed from `WaveBackground.jsx` to `waveFragment.glsl
 | `u_blur` | `float` | Every frame | Wave edge softness |
 | `u_concentration` | `float` | Every frame | Wave vertical compression |
 | `u_randomness` | `float` | Every frame | Per-wave amplitude variation |
+| `u_verticalOffset` | `float` | Every frame | Vertical shift from center (-0.5 to 0.5) |
 | `u_splitFill` | `float` | Every frame | Rendering mode (0.0 = band, 1.0 = split fill) |
 
 ---
@@ -388,36 +390,32 @@ npm run dev          # Start the dev server first
 npx playwright install chromium  # One-time browser install
 ```
 
-### Unit Tests
+### Unit + Visual Tests
 
 ```bash
-node test-comprehensive.mjs
+node test-all.mjs
 ```
 
-**136 assertions** across 22 test groups:
+**93 assertions** plus **30+ screenshots** across 18 test groups:
 
 1. Panel visibility toggle (open/close/reopen)
-2. All 9 slider default values
-3. All 9 slider min/max bounds (18 checks)
+2. All 10 slider default values (including Vertical Offset)
+3. All 10 slider min/max bounds (20 checks)
 4. Setting each slider to a non-default value
-5. Displayed value formatting (integers, 2-decimal, 3-decimal)
-6. Reset to defaults (all 9 sliders)
-7. 6 color theme buttons with correct titles
-8. Theme visual activation (scale transform, deactivation of others)
-9. 4 custom color swatches
-10. Color picker popup open/close
-11. Picker internals (SV area, hue bar, alpha bar, R/G/B/A inputs)
-12. Changing R value updates swatch color
-13. Changing A value updates swatch opacity
-14. Color persistence after close/reopen
-15. Split Fill checkbox toggle
-16. Reset clears Split Fill
-17. WebGL canvas dimensions
-18. WebGL context active (not lost)
-19. Randomness slider (0 and 1)
-20. Concentration at max (50)
-21. Theme stability (no change after 5 seconds)
-22. Multiple parameter combinations
+5. Displayed value formatting (integers, 2-decimal, 3-decimal, negative values)
+6. Reset to defaults (all 10 sliders)
+7. 6 color theme buttons with correct titles and activation
+8. 4 custom color swatches
+9. Color picker (SV area, hue bar, alpha bar, RGBA inputs, color changes, opacity changes, persistence)
+10. Custom color preservation (verifies the auto-timer doesn't overwrite custom theme)
+11. Split Fill checkbox toggle and reset
+12. Vertical Offset at multiple values (-0.5, -0.3, 0, 0.3, 0.5) with screenshots
+13. Vertical Offset + Concentration combined
+14. WebGL canvas (visible, dimensions, context active)
+15. Theme stability (no auto-change after 5 seconds)
+16. All 6 color theme screenshots
+17. Visual parameter tests (waves, amplitude, concentration, randomness, split fill extremes)
+18. Custom colors + Vertical Offset + Concentration combined
 
 ### Visual Tests
 

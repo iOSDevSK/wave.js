@@ -30,6 +30,7 @@ export default function WaveBackground({ colors, colorOpacities, mouse, params, 
     u_blur: { value: params.blur },
     u_concentration: { value: params.concentration },
     u_randomness: { value: params.randomness },
+    u_verticalOffset: { value: params.verticalOffset },
     u_splitFill: { value: splitFill ? 1.0 : 0.0 },
   }), [])
 
@@ -79,6 +80,7 @@ export default function WaveBackground({ colors, colorOpacities, mouse, params, 
     uniforms.u_blur.value = params.blur
     uniforms.u_concentration.value = params.concentration
     uniforms.u_randomness.value = params.randomness
+    uniforms.u_verticalOffset.value = params.verticalOffset
     uniforms.u_splitFill.value = splitFill ? 1.0 : 0.0
     uniforms.u_colorOpacity1.value = colorOpacities[0]
     uniforms.u_colorOpacity2.value = colorOpacities[1]

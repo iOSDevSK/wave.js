@@ -26,6 +26,7 @@ uniform float u_thickness;
 uniform float u_blur;
 uniform float u_concentration;
 uniform float u_randomness;
+uniform float u_verticalOffset;
 uniform float u_splitFill;
 
 varying vec2 v_uv;
@@ -46,7 +47,7 @@ void main() {
 
   // Wave distribution range — shrinks toward center with concentration
   float range = 0.85 / (1.0 + u_concentration);
-  float startY = 0.5 - range / 2.0;
+  float startY = 0.5 + u_verticalOffset - range / 2.0;
 
   // Draw waves from back to front
   for (int i = 0; i < 20; i++) {

@@ -7,7 +7,7 @@ GPU-accelerated animated sine wave backgrounds for React. Built with Three.js an
 ## Features
 
 - Real-time sinusoidal wave animation rendered on the GPU via WebGL
-- 9 adjustable parameters (wave count, speed, amplitude, frequency, opacity, thickness, blur, concentration, randomness)
+- 10 adjustable parameters (wave count, speed, amplitude, frequency, opacity, thickness, blur, concentration, randomness, vertical offset)
 - 6 built-in color themes with automatic time-of-day selection
 - Custom RGBA color picker with per-color opacity control
 - Wave concentration control — compress waves toward the screen center
@@ -90,6 +90,7 @@ All parameters are adjustable at runtime via the built-in control panel (top-rig
 | Blur | `0.030` | 0 – 0.3 | Softness / blur of wave edges |
 | Concentration | `0` | 0 – 50 | Compresses wave distribution toward the vertical center. At 0, waves are spread evenly across the full screen height. Higher values shrink the wave band into a narrow strip around the center. |
 | Randomness | `0` | 0 – 1 | Per-wave amplitude variation. At 0, all waves share the same amplitude. At 1, each wave gets a random amplitude between 0 and the Amplitude value. |
+| Vertical Offset | `0` | -0.5 – 0.5 | Shifts the entire wave group up or down from the screen center. Positive values move waves up, negative values move them down. Combines with Concentration. |
 
 ## Rendering Modes
 
@@ -161,6 +162,7 @@ There is no DOM manipulation, no CSS animation, and no JavaScript-driven per-pix
 | `u_blur` | `float` | Wave edge softness |
 | `u_concentration` | `float` | Wave vertical compression |
 | `u_randomness` | `float` | Per-wave amplitude variation |
+| `u_verticalOffset` | `float` | Vertical shift from center (-0.5 to 0.5) |
 | `u_splitFill` | `float` | Rendering mode (0 = band, 1 = split fill) |
 
 ## Project Structure
@@ -173,7 +175,7 @@ src/
     waveVertex.glsl       Vertex shader (passthrough)
     waveFragment.glsl     Fragment shader (sine waves, colors, grain)
 
-test-comprehensive.mjs    136 unit tests (Playwright)
+test-all.mjs              93 unit + visual tests (Playwright)
 test-visual.mjs           35 visual screenshot tests (Playwright)
 screenshots/              Test screenshot output
 ```
@@ -185,10 +187,10 @@ The project includes comprehensive Playwright-based tests.
 ### Unit Tests
 
 ```bash
-node test-comprehensive.mjs
+node test-all.mjs
 ```
 
-136 assertions covering: panel toggle, default values, slider bounds, value changes, display formatting, reset behavior, color themes, custom color picker, split fill toggle, WebGL canvas, theme stability, and parameter combinations.
+93 assertions covering: panel toggle, 10 slider defaults/bounds/changes, display formatting, reset behavior, 6 color themes, custom color picker (RGBA inputs, persistence), custom color preservation (bug fix verification), split fill toggle, vertical offset, vertical offset + concentration combos, WebGL canvas, theme stability, and 30+ visual screenshots across all parameter extremes and combinations.
 
 ### Visual Tests
 
