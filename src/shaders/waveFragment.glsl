@@ -31,6 +31,12 @@ uniform float u_verticalOffset;
 uniform float u_splitFill;
 uniform float u_glass;
 uniform float u_liquidMetal;
+uniform float u_lmRefraction;
+uniform float u_lmEdge;
+uniform float u_lmPatternBlur;
+uniform float u_lmLiquid;
+uniform float u_lmSpeed;
+uniform float u_lmPatternScale;
 
 varying vec2 v_uv;
 
@@ -177,36 +183,40 @@ void main() {
       alpha *= 0.75;
     }
 
-    // Liquid metal effect (MetalFlow-inspired): chrome stripes, simplex noise, chromatic aberration
+    // Liquid metal effect (MetalFlow-inspired)
     if (u_liquidMetal > 0.5) {
       float mDist = uv.y - waveY;
       float absDist = abs(mDist);
       float bandWidth = thick + u_blur + 0.02;
       float normDist = clamp(absDist / bandWidth, 0.0, 1.0);
 
+      // Edge softness control
+      float edgeMask = smoothstep(1.0, 1.0 - u_lmEdge * 0.5, normDist);
+
       // Wave slope for surface curvature
       float dx = cos(uv.x * aspect * u_frequency + t * (0.8 + fi * 0.1) + phase) * amp;
       float bulge = clamp(1.0 - normDist * 1.2, 0.0, 1.0);
 
-      // Simplex noise for liquid organic flow
-      float noise = snoise(vec2(uv.x * aspect * 2.0 + fi * 1.5, waveY * 6.0) - t * 0.2);
-      float noise2 = snoise(vec2(uv.x * aspect * 4.0 - fi * 0.7, waveY * 10.0) + t * 0.15);
+      // Simplex noise for liquid flow (controlled by Liquify and Metal Speed)
+      float lmT = u_time * u_lmSpeed;
+      float noise = snoise(vec2(uv.x * aspect * 2.0 + fi * 1.5, waveY * 6.0) - lmT * 0.7);
+      float noise2 = snoise(vec2(uv.x * aspect * 4.0 - fi * 0.7, waveY * 10.0) + lmT * 0.5);
 
       // Diagonal stripe direction flowing along wave surface
       float diagonal = uv.x * aspect - uv.y;
       float dir = diagonal * 1.5 + dx * 3.0 + waveY * 2.0;
-      dir += noise * 0.2 * bulge;
-      dir -= t * 0.3;
+      dir += noise * u_lmLiquid * 3.0 * bulge;
+      dir -= lmT;
       dir *= bulge;
 
-      // Chrome stripe pattern
-      float cycleWidth = 0.8;
+      // Chrome stripe pattern (controlled by Pattern Scale)
+      float cycleWidth = u_lmPatternScale * 0.4;
       float thinStrip = 0.18 * (1.0 - 0.25 * bulge);
-      float patternBlur = 0.08;
+      float patternBlur = u_lmPatternBlur * 16.0 + 0.01;
 
-      // Subtle chromatic aberration
-      float refr = 0.02 * bulge;
-      float stripe_r = mod(dir + refr + noise2 * 0.02, cycleWidth) / cycleWidth;
+      // Chromatic aberration (controlled by Refraction)
+      float refr = u_lmRefraction * bulge * 33.0;
+      float stripe_r = mod(dir + refr + noise2 * u_lmLiquid * 0.3, cycleWidth) / cycleWidth;
       float stripe_g = mod(dir, cycleWidth) / cycleWidth;
       float stripe_b = mod(dir - refr * 1.3, cycleWidth) / cycleWidth;
 
@@ -229,7 +239,7 @@ void main() {
 
       vec3 metalColor = vec3(r, g, b);
 
-      // Depth gradient: brighter above wave, darker below
+      // Depth gradient
       float depthGrad = smoothstep(-bandWidth, bandWidth, mDist);
       metalColor = mix(metalColor * 0.7, metalColor * 1.2, depthGrad);
 
@@ -241,10 +251,11 @@ void main() {
       float spec = pow(max(0.0, 1.0 - normDist * 4.0), 5.0);
       metalColor += vec3(spec * 0.15);
 
-      // Liquid shimmer from noise
-      metalColor += noise2 * 0.04 * bulge;
+      // Liquid shimmer
+      metalColor += noise2 * u_lmLiquid * 0.6 * bulge;
 
-      waveColor = metalColor;
+      // Apply edge softness
+      waveColor = mix(waveColor, metalColor, edgeMask);
     }
 
     color = mix(color, waveColor, alpha * colorAlpha);

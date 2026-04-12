@@ -24,6 +24,13 @@ const DEFAULTS = {
   randomness: 0,
   thicknessRandom: 0,
   verticalOffset: 0,
+  // Liquid Metal params
+  lmRefraction: 0.015,
+  lmEdge: 0.4,
+  lmPatternBlur: 0.005,
+  lmLiquid: 0.07,
+  lmSpeed: 0.3,
+  lmPatternScale: 2.0,
 }
 
 function getTimeOfDay() {
@@ -601,6 +608,30 @@ export default function HeroWave({ theme: themeProp, className, style, children 
               </div>
               <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Liquid Metal</span>
             </label>
+
+            {/* Liquid Metal sub-settings */}
+            {liquidMetal && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingLeft: 8, borderLeft: '2px solid rgba(255,255,255,0.1)' }}>
+                {[
+                  { key: 'lmRefraction', label: 'Refraction', min: 0, max: 0.03, step: 0.001 },
+                  { key: 'lmEdge', label: 'Edge', min: 0, max: 1, step: 0.01 },
+                  { key: 'lmPatternBlur', label: 'Pattern Blur', min: 0, max: 0.02, step: 0.001 },
+                  { key: 'lmLiquid', label: 'Liquify', min: 0, max: 0.2, step: 0.001 },
+                  { key: 'lmSpeed', label: 'Metal Speed', min: 0, max: 0.5, step: 0.01 },
+                  { key: 'lmPatternScale', label: 'Pattern Scale', min: 0.5, max: 5, step: 0.1 },
+                ].map(s => (
+                  <Slider
+                    key={s.key}
+                    label={s.label}
+                    value={params[s.key]}
+                    min={s.min}
+                    max={s.max}
+                    step={s.step}
+                    onChange={v => setParam(s.key, v)}
+                  />
+                ))}
+              </div>
+            )}
 
             {/* Reset */}
             <button
