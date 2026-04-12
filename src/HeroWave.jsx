@@ -72,7 +72,7 @@ function hsvToHex(h, s, v) {
     return v - v * s * Math.max(0, Math.min(k, 4 - k, 1))
   }
   const toHex = (x) => Math.round(x * 255).toString(16).padStart(2, '0')
-  return `#${toHex(f(0))}${toHex(f(2))}${toHex(f(4))}`
+  return `#${toHex(f(5))}${toHex(f(3))}${toHex(f(1))}`
 }
 
 // --- Draggable bar helper ---
@@ -143,6 +143,7 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange }) {
   const alphaBind = useBarDrag((val) => onOpacityChange(val))
 
   const hueColor = hsvToHex(hsv.h, 1, 1)
+  const currentColor = hsvToHex(hsv.h, hsv.s, hsv.v)
   const pickerSize = 160
 
   return (
@@ -244,7 +245,7 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange }) {
               width: pickerSize,
               height: 12,
               borderRadius: 6,
-              background: `linear-gradient(to right, transparent, ${color})`,
+              background: `linear-gradient(to right, transparent, ${currentColor})`,
               cursor: 'pointer',
               touchAction: 'none',
             }}
@@ -263,7 +264,7 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange }) {
               borderRadius: '50%',
               border: '2px solid white',
               boxShadow: '0 0 3px rgba(0,0,0,0.5)',
-              background: color,
+              background: currentColor,
               transform: 'translate(-50%, -50%)',
               pointerEvents: 'none',
             }} />
@@ -272,7 +273,7 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange }) {
           {/* RGBA values */}
           <div style={{ display: 'flex', gap: 4 }}>
             {['R', 'G', 'B'].map((ch, ci) => {
-              const val = parseInt(color.slice(1 + ci * 2, 3 + ci * 2), 16)
+              const val = parseInt(currentColor.slice(1 + ci * 2, 3 + ci * 2), 16)
               return (
                 <div key={ch} style={{ flex: 1, textAlign: 'center' }}>
                   <input
@@ -282,9 +283,9 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange }) {
                     onChange={(e) => {
                       const v = Math.max(0, Math.min(255, parseInt(e.target.value) || 0))
                       const parts = [
-                        parseInt(color.slice(1, 3), 16),
-                        parseInt(color.slice(3, 5), 16),
-                        parseInt(color.slice(5, 7), 16),
+                        parseInt(currentColor.slice(1, 3), 16),
+                        parseInt(currentColor.slice(3, 5), 16),
+                        parseInt(currentColor.slice(5, 7), 16),
                       ]
                       parts[ci] = v
                       const hex = '#' + parts.map(p => p.toString(16).padStart(2, '0')).join('')
