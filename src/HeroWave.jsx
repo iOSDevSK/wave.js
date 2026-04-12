@@ -21,6 +21,7 @@ const DEFAULTS = {
   thickness: 0.06,
   blur: 0.03,
   concentration: 0,
+  randomness: 0,
 }
 
 function getTimeOfDay() {
@@ -41,7 +42,8 @@ const SLIDER_DEFS = [
   { key: 'opacity',   label: 'Opacity', min: 0, max: 1, step: 0.01 },
   { key: 'thickness', label: 'Thickness', min: 0.01, max: 0.2, step: 0.001 },
   { key: 'blur',      label: 'Blur', min: 0, max: 0.3, step: 0.001 },
-  { key: 'concentration', label: 'Concentration', min: 0, max: 10, step: 0.1 },
+  { key: 'concentration', label: 'Concentration', min: 0, max: 50, step: 0.1 },
+  { key: 'randomness', label: 'Randomness', min: 0, max: 1, step: 0.01 },
 ]
 
 // --- Color helpers ---
@@ -369,6 +371,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
   const [colorOpacities, setColorOpacities] = useState([1, 1, 1, 1])
   const [panelOpen, setPanelOpen] = useState(true)
   const [params, setParams] = useState({ ...DEFAULTS })
+  const [splitFill, setSplitFill] = useState(false)
 
   const colors = currentTheme === 'custom' && customColors
     ? customColors
@@ -397,6 +400,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
   const resetDefaults = () => {
     setParams({ ...DEFAULTS })
     setColorOpacities([1, 1, 1, 1])
+    setSplitFill(false)
   }
 
   return (
@@ -413,7 +417,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
         style={{ position: 'absolute', inset: 0 }}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
       >
-        <WaveBackground colors={colors} colorOpacities={colorOpacities} mouse={mouseRef} params={params} />
+        <WaveBackground colors={colors} colorOpacities={colorOpacities} mouse={mouseRef} params={params} splitFill={splitFill} />
       </Canvas>
 
       {/* ---- Control Panel ---- */}
@@ -520,6 +524,28 @@ export default function HeroWave({ theme: themeProp, className, style, children 
                 ))}
               </div>
             </div>
+
+            {/* Split fill mode */}
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <div
+                onClick={() => setSplitFill(v => !v)}
+                style={{
+                  width: 18, height: 18,
+                  borderRadius: 4,
+                  border: '1.5px solid rgba(255,255,255,0.25)',
+                  background: splitFill ? 'rgba(255,255,255,0.25)' : 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                {splitFill && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </div>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Split Fill</span>
+            </label>
 
             {/* Reset */}
             <button

@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import waveVertexShader from './shaders/waveVertex.glsl'
 import waveFragmentShader from './shaders/waveFragment.glsl'
 
-export default function WaveBackground({ colors, colorOpacities, mouse, params }) {
+export default function WaveBackground({ colors, colorOpacities, mouse, params, splitFill }) {
   const meshRef = useRef()
   const { viewport, size } = useThree()
 
@@ -29,6 +29,8 @@ export default function WaveBackground({ colors, colorOpacities, mouse, params }
     u_thickness: { value: params.thickness },
     u_blur: { value: params.blur },
     u_concentration: { value: params.concentration },
+    u_randomness: { value: params.randomness },
+    u_splitFill: { value: splitFill ? 1.0 : 0.0 },
   }), [])
 
   // Animate color transitions
@@ -76,6 +78,8 @@ export default function WaveBackground({ colors, colorOpacities, mouse, params }
     uniforms.u_thickness.value = params.thickness
     uniforms.u_blur.value = params.blur
     uniforms.u_concentration.value = params.concentration
+    uniforms.u_randomness.value = params.randomness
+    uniforms.u_splitFill.value = splitFill ? 1.0 : 0.0
     uniforms.u_colorOpacity1.value = colorOpacities[0]
     uniforms.u_colorOpacity2.value = colorOpacities[1]
     uniforms.u_colorOpacity3.value = colorOpacities[2]

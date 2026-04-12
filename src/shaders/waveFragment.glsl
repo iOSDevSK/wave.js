@@ -25,6 +25,8 @@ uniform float u_opacity;
 uniform float u_thickness;
 uniform float u_blur;
 uniform float u_concentration;
+uniform float u_randomness;
+uniform float u_splitFill;
 
 varying vec2 v_uv;
 
@@ -56,22 +58,33 @@ void main() {
     // Base Y — distribute across screen, concentrated toward center
     float baseY = startY + fi / max(float(waveCount) - 1.0, 1.0) * range;
 
+    // Per-wave amplitude: randomness scales each wave differently using seed
+    float waveRand = fract(sin(fi * 127.1 + u_seed * 311.7) * 43758.5453);
+    float amp = u_amplitude * (1.0 - u_randomness + u_randomness * waveRand);
+
     // Classic sine wave with layered harmonics
     float wave = 0.0;
-    wave += sin(uv.x * aspect * u_frequency + t * (0.8 + fi * 0.1) + phase) * u_amplitude;
-    wave += sin(uv.x * aspect * u_frequency * 2.0 - t * (0.5 + fi * 0.15) + phase * 2.0) * u_amplitude * 0.4;
-    wave += sin(uv.x * aspect * u_frequency * 0.5 + t * (0.3 + fi * 0.05) + phase * 3.0) * u_amplitude * 0.6;
+    wave += sin(uv.x * aspect * u_frequency + t * (0.8 + fi * 0.1) + phase) * amp;
+    wave += sin(uv.x * aspect * u_frequency * 2.0 - t * (0.5 + fi * 0.15) + phase * 2.0) * amp * 0.4;
+    wave += sin(uv.x * aspect * u_frequency * 0.5 + t * (0.3 + fi * 0.05) + phase * 3.0) * amp * 0.6;
 
     // Mouse pushes waves
     wave += mouseInfluence * sin(uv.x * aspect * 3.0 + fi) * 0.3;
 
     float waveY = baseY + wave;
 
-    // Symmetric band around wave position
+    // Edge calculation
     float edgeWidth = u_thickness + u_blur;
-    float halfExtent = range * 0.5 + edgeWidth;
-    float dist = abs(uv.y - waveY);
-    float edge = 1.0 - smoothstep(halfExtent - edgeWidth, halfExtent, dist);
+    float edge;
+    if (u_splitFill > 0.5) {
+      // Split fill: one-directional fill above wave line
+      edge = smoothstep(waveY - edgeWidth, waveY, uv.y);
+    } else {
+      // Symmetric band around wave position
+      float halfExtent = range * 0.5 + edgeWidth;
+      float dist = abs(uv.y - waveY);
+      edge = 1.0 - smoothstep(halfExtent - edgeWidth, halfExtent, dist);
+    }
 
     // Per-wave opacity — back waves more transparent, front more opaque
     float layerAlpha = u_opacity * (0.25 + 0.75 * (fi / max(float(waveCount) - 1.0, 1.0)));
