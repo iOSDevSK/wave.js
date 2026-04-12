@@ -80,16 +80,16 @@ void main() {
     float thick = u_thickness * (1.0 - u_thicknessRandom + u_thicknessRandom * thickRand);
 
     // Edge calculation
-    float edgeWidth = thick + u_blur;
+    // thick = solid core half-width, blur = soft fade width on edges
     float edge;
     if (u_splitFill > 0.5) {
-      // Split fill: one-directional fill above wave line
-      edge = smoothstep(waveY - edgeWidth, waveY, uv.y);
+      // Split fill: solid above (waveY - thick), blur zone below that
+      edge = smoothstep(waveY - thick - u_blur, waveY - thick, uv.y);
     } else {
-      // Symmetric band around wave position
-      float halfExtent = range * 0.5 + edgeWidth;
+      // Symmetric band: solid core of 'thick', then blur fade
+      float halfExtent = range * 0.5 + thick;
       float dist = abs(uv.y - waveY);
-      edge = 1.0 - smoothstep(halfExtent - edgeWidth, halfExtent, dist);
+      edge = 1.0 - smoothstep(halfExtent, halfExtent + u_blur, dist);
     }
 
     // Per-wave opacity — back waves more transparent, front more opaque
