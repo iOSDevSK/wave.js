@@ -29,7 +29,7 @@ uniform float u_randomness;
 uniform float u_thicknessRandom;
 uniform float u_verticalOffset;
 uniform float u_splitFill;
-uniform float u_glass;
+uniform float u_liquidMetal;
 
 varying vec2 v_uv;
 
@@ -119,42 +119,52 @@ void main() {
     float brightness = 0.95 + 0.1 * sin(uv.x * aspect * 3.0 + t * 0.5 + fi);
     waveColor *= brightness;
 
-    // Glass effect: transparency, refraction, caustic highlights, soft edges
-    if (u_glass > 0.5) {
+    // Liquid metal effect: chrome reflections, Fresnel, noise distortion, depth gradient
+    if (u_liquidMetal > 0.5) {
       float distFromWave = uv.y - waveY;
       float absDist = abs(distFromWave);
       float bandWidth = thick + u_blur + 0.02;
+      float normDist = clamp(absDist / bandWidth, 0.0, 1.0);
 
-      // Make wave semi-transparent — let background bleed through
-      waveColor = mix(waveColor, color, 0.4);
-
-      // Refraction: shift the background color sampling based on wave slope
+      // Wave surface slope for fake "normal"
       float dx = cos(uv.x * aspect * u_frequency + t * (0.8 + fi * 0.1) + phase) * amp;
-      float refractShift = dx * 2.0;
-      float refractedY = uv.y + refractShift * 0.05;
-      // Tint based on refracted position (simulates light bending through glass)
-      float refractTint = smoothstep(0.3, 0.7, refractedY);
-      waveColor = mix(waveColor, waveColor * (0.8 + refractTint * 0.4), 0.5);
+      float slope = atan(dx * 8.0) / 3.14159;
 
-      // Caustic highlights: bright spots where light focuses through curved glass
-      float caustic1 = sin(uv.x * aspect * u_frequency * 3.0 + t * 1.2 + phase * 2.0) * 0.5 + 0.5;
-      float caustic2 = sin(uv.x * aspect * u_frequency * 5.0 - t * 0.8 + phase * 3.0) * 0.5 + 0.5;
-      float caustics = pow(caustic1 * caustic2, 2.0);
-      // Caustics strongest near wave center
-      float nearCenter = 1.0 - smoothstep(0.0, bandWidth * 0.6, absDist);
-      waveColor += vec3(caustics * nearCenter * 0.15);
+      // Fake environment reflection: index into gradient using slope + position
+      float envAngle = slope * 0.5 + normDist * 0.3 + waveY * 0.2;
+      vec3 envDark = waveColor * 0.15;
+      vec3 envMid = waveColor * 0.6;
+      vec3 envBright = waveColor * 1.5 + vec3(0.3);
+      vec3 envColor = envAngle < 0.3
+        ? mix(envDark, envMid, envAngle / 0.3)
+        : mix(envMid, envBright, (envAngle - 0.3) / 0.7);
 
-      // Fresnel: bright edge highlight on glass rim
-      float edgeProximity = smoothstep(0.0, bandWidth, absDist);
-      float fresnel = pow(edgeProximity, 0.8) * (1.0 - edgeProximity);
-      waveColor += vec3(fresnel * 0.25);
+      // Noise-based surface perturbation for liquid quality
+      float noise1 = sin(uv.x * aspect * 17.0 + uv.y * 13.0 + t * 0.7 + fi * 5.0) * 0.5 + 0.5;
+      float noise2 = sin(uv.x * aspect * 31.0 - uv.y * 23.0 - t * 0.5 + fi * 3.0) * 0.5 + 0.5;
+      float liquidNoise = noise1 * noise2;
+      envColor += (liquidNoise - 0.5) * 0.15;
 
-      // Soft specular highlight along wave crest (like light reflecting off glass surface)
-      float specular = pow(max(0.0, 1.0 - absDist / (bandWidth * 0.15)), 6.0);
-      waveColor += vec3(specular * 0.12);
+      // Fresnel: very bright edge glow (lamina-style)
+      float fresnel = pow(1.0 - normDist, 0.5) * normDist;
+      fresnel = pow(fresnel * 2.5, 2.0);
+      vec3 fresnelColor = waveColor * 2.0 + vec3(0.4);
 
-      // Reduce overall opacity for glass transparency feel
-      alpha *= 0.75;
+      // Specular highlight on wave crest
+      float specIntensity = pow(max(0.0, 1.0 - normDist * 4.0), 8.0);
+      // Secondary specular shifted by slope
+      float spec2 = pow(max(0.0, 1.0 - abs(normDist - 0.15 + slope * 0.1) * 8.0), 6.0);
+
+      // Depth-based darkening (lamina Depth layer concept)
+      float depthFactor = 1.0 - normDist * 0.5;
+
+      // Combine layers
+      waveColor = envColor * depthFactor;
+      waveColor = mix(waveColor, fresnelColor, fresnel * 0.5);
+      waveColor += vec3(specIntensity * 0.35 + spec2 * 0.15);
+
+      // Boost contrast for chrome look
+      waveColor = pow(waveColor, vec3(0.85));
     }
 
     color = mix(color, waveColor, alpha * colorAlpha);

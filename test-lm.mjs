@@ -47,10 +47,10 @@ async function toggleCheckbox(page, label) {
   await sleep(2000);
 
   // =============================================
-  console.log('\n--- 1. Glass checkbox exists ---');
+  console.log('\n--- 1. Liquid Metal checkbox exists ---');
   // =============================================
-  const glassLabel = page.locator('label:has(span:text-is("Glass"))');
-  assert(await glassLabel.isVisible(), 'Glass label visible');
+  const glassLabel = page.locator('label:has(span:text-is("Liquid Metal"))');
+  assert(await glassLabel.isVisible(), 'Liquid Metal label visible');
   const glassBox = glassLabel.locator('div').first();
   const defaultBg = await glassBox.evaluate(el => el.style.background);
   assert(defaultBg === 'transparent', `Default unchecked (got ${defaultBg})`);
@@ -61,12 +61,12 @@ async function toggleCheckbox(page, label) {
   await glassBox.click();
   await sleep(300);
   const onBg = await glassBox.evaluate(el => el.style.background);
-  assert(onBg.includes('rgba(255'), 'Glass toggles on');
+  assert(onBg.includes('rgba(255'), 'Liquid Metal toggles on');
 
   await glassBox.click();
   await sleep(300);
   const offBg = await glassBox.evaluate(el => el.style.background);
-  assert(offBg === 'transparent', 'Glass toggles off');
+  assert(offBg === 'transparent', 'Liquid Metal toggles off');
 
   // =============================================
   console.log('\n--- 3. Reset clears glass ---');
@@ -79,55 +79,55 @@ async function toggleCheckbox(page, label) {
   // =============================================
   console.log('\n--- 4. Visual comparison: off vs on ---');
   // =============================================
-  await screenshot(page, 'glass_01_off_default');
+  await screenshot(page, 'lm_01_off_default');
 
-  await toggleCheckbox(page, 'Glass');
+  await toggleCheckbox(page, 'Liquid Metal');
   await sleep(500);
-  await screenshot(page, 'glass_02_on_default');
+  await screenshot(page, 'lm_02_on_default');
 
   // =============================================
-  console.log('\n--- 5. Glass with different themes ---');
+  console.log('\n--- 5. Liquid Metal with different themes ---');
   // =============================================
   const themeButtons = page.locator('button[title]');
 
   await themeButtons.nth(0).click(); // pre-dawn
   await sleep(1800);
-  await screenshot(page, 'glass_03_predawn');
+  await screenshot(page, 'lm_03_predawn');
 
   await themeButtons.nth(4).click(); // sunset
   await sleep(1800);
-  await screenshot(page, 'glass_04_sunset');
+  await screenshot(page, 'lm_04_sunset');
 
   await themeButtons.nth(5).click(); // night
   await sleep(1800);
-  await screenshot(page, 'glass_05_night');
+  await screenshot(page, 'lm_05_night');
 
   // =============================================
-  console.log('\n--- 6. Glass with high amplitude ---');
+  console.log('\n--- 6. Liquid Metal with high amplitude ---');
   // =============================================
   await clickReset(page);
-  await toggleCheckbox(page, 'Glass');
+  await toggleCheckbox(page, 'Liquid Metal');
   await setSlider(page, 'Amplitude', 0.15);
   await setSlider(page, 'Frequency', 5);
   await sleep(500);
-  await screenshot(page, 'glass_06_high_amp');
+  await screenshot(page, 'lm_06_high_amp');
 
   // =============================================
-  console.log('\n--- 7. Glass with concentration ---');
+  console.log('\n--- 7. Liquid Metal with concentration ---');
   // =============================================
   await setSlider(page, 'Concentration', 10);
   await sleep(500);
-  await screenshot(page, 'glass_07_concentrated');
+  await screenshot(page, 'lm_07_concentrated');
 
   // =============================================
-  console.log('\n--- 8. Glass with many waves ---');
+  console.log('\n--- 8. Liquid Metal with many waves ---');
   // =============================================
   await clickReset(page);
-  await toggleCheckbox(page, 'Glass');
+  await toggleCheckbox(page, 'Liquid Metal');
   await setSlider(page, 'Waves', 20);
   await setSlider(page, 'Amplitude', 0.1);
   await sleep(500);
-  await screenshot(page, 'glass_08_20waves');
+  await screenshot(page, 'lm_08_20waves');
 
   // =============================================
   console.log('\n--- 9. WebGL still working ---');
