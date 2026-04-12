@@ -210,6 +210,41 @@ edge = smoothstep(waveY - thickness - blur, waveY - thickness, uv.y);
 
 This creates a layered "stacked fill" effect. With concentration, it produces a visible horizontal split — colored above, background below. Useful for sharp horizon-like divides.
 
+### Glass
+
+```
+Glass: [x] (checked)
+```
+
+Semi-transparent waves with optical effects:
+
+- **Background bleed-through** — waves are 40% transparent, background color shows through
+- **Refraction** — wave slope shifts the perceived color, simulating light bending through glass
+- **Caustic highlights** — animated bright spots from overlapping sine patterns, strongest near wave center
+- **Fresnel rim glow** — bright edges where the "glass surface" curves away
+- **Specular highlight** — soft bright line along wave crest
+
+Glass reduces overall wave opacity by 25% for a translucent feel. Can be combined with other effects.
+
+### Liquid Metal
+
+```
+Liquid Metal: [x] (checked)
+```
+
+Smooth 3D chrome effect with iridescent color tinting, inspired by [MetalFlow](https://github.com/Saganaki22/MetalFlow). When enabled, 6 sub-parameters appear in the control panel:
+
+| Parameter | Key | Default | Min | Max | Step | Description |
+|-----------|-----|---------|-----|-----|------|-------------|
+| **Refraction** | `lmRefraction` | `0.015` | 0 | 0.03 | 0.001 | Chromatic aberration intensity. Offsets R and B channels differently based on surface curvature, creating rainbow edge fringing on dark areas. At 0, no color separation. |
+| **Edge** | `lmEdge` | `0.4` | 0 | 1 | 0.01 | Edge softness of the metallic effect. Controls how the liquid metal blends with the underlying wave color at boundaries. At 0, hard edge. At 1, very soft fade. |
+| **Pattern Blur** | `lmPatternBlur` | `0.005` | 0 | 0.02 | 0.001 | Smoothness of the fake environment reflection. Higher values create broader, smoother highlights. Lower values create sharper contrast between light and dark areas. |
+| **Liquify** | `lmLiquid` | `0.07` | 0 | 0.2 | 0.001 | Flow intensity from simplex noise. Distorts the surface "normal" creating organic, flowing liquid quality. At 0, surface is smooth. At max, highly turbulent. |
+| **Metal Speed** | `lmSpeed` | `0.3` | 0 | 0.5 | 0.01 | Animation speed of the liquid metal noise and flow. Independent from the main Speed parameter. At 0, the metal surface is static. |
+| **Pattern Scale** | `lmPatternScale` | `2.0` | 0.5 | 5 | 0.1 | Scale of the surface curvature effect. Higher values amplify the wave slope's influence on reflections, creating more dramatic light/dark variations. |
+
+The effect uses three layers of simplex noise at different frequencies to create organic liquid distortion. The fake environment reflection maps wave slope to a smooth bright/dark gradient. Iridescent color tinting shifts the wave color's hue based on surface angle. Chromatic aberration is applied selectively on dark areas for subtle rainbow fringing.
+
 ---
 
 ## Shader Uniforms
@@ -242,6 +277,14 @@ Complete list of uniforms passed from `WaveBackground.jsx` to `waveFragment.glsl
 | `u_thicknessRandom` | `float` | Every frame | Per-wave thickness variation |
 | `u_verticalOffset` | `float` | Every frame | Vertical shift from center (-0.5 to 0.5) |
 | `u_splitFill` | `float` | Every frame | Rendering mode (0.0 = band, 1.0 = split fill) |
+| `u_glass` | `float` | Every frame | Glass effect toggle (0.0 or 1.0) |
+| `u_liquidMetal` | `float` | Every frame | Liquid Metal effect toggle (0.0 or 1.0) |
+| `u_lmRefraction` | `float` | Every frame | Liquid Metal chromatic aberration intensity |
+| `u_lmEdge` | `float` | Every frame | Liquid Metal edge softness |
+| `u_lmPatternBlur` | `float` | Every frame | Liquid Metal environment reflection smoothness |
+| `u_lmLiquid` | `float` | Every frame | Liquid Metal noise flow intensity |
+| `u_lmSpeed` | `float` | Every frame | Liquid Metal animation speed |
+| `u_lmPatternScale` | `float` | Every frame | Liquid Metal surface curvature scale |
 
 ---
 

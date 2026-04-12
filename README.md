@@ -13,6 +13,8 @@ GPU-accelerated animated sine wave backgrounds for React. Built with Three.js an
 - Wave concentration control — compress waves toward the screen center
 - Per-wave amplitude randomness for organic variation
 - Split Fill rendering mode toggle
+- Glass effect (transparency, refraction, caustics)
+- Liquid Metal effect with 6 adjustable sub-parameters (MetalFlow-inspired smooth 3D chrome with iridescent tint)
 - Mouse-reactive wave distortion
 - Smooth animated transitions between color themes
 - Film grain post-processing
@@ -103,6 +105,23 @@ Each wave renders color in a symmetric band around its position. The band width 
 
 Toggle the **Split Fill** checkbox in the control panel to enable one-directional fill mode. In this mode, each wave fills color upward from its wave line to the top of the screen. This creates a layered "stacked fill" look and produces a visible horizontal split when waves are concentrated.
 
+### Glass
+
+Toggle the **Glass** checkbox for a transparent, refractive look. Waves become semi-transparent with caustic highlights, Fresnel rim glow, and refraction-based color shifting.
+
+### Liquid Metal
+
+Toggle the **Liquid Metal** checkbox for a smooth 3D chrome effect with iridescent tint. Inspired by [MetalFlow](https://github.com/Saganaki22/MetalFlow). When enabled, 6 sub-parameters appear:
+
+| Parameter | Default | Range | Description |
+|-----------|---------|-------|-------------|
+| Refraction | `0.015` | 0 – 0.03 | Chromatic aberration intensity |
+| Edge | `0.4` | 0 – 1 | Edge softness of the metallic effect |
+| Pattern Blur | `0.005` | 0 – 0.02 | Smoothness of the environment reflection |
+| Liquify | `0.07` | 0 – 0.2 | Flow intensity from simplex noise distortion |
+| Metal Speed | `0.3` | 0 – 0.5 | Animation speed of the liquid metal |
+| Pattern Scale | `2.0` | 0.5 – 5 | Scale of the surface curvature effect |
+
 ## Color Themes
 
 Each theme defines 4 colors: background, and 3 wave gradient stops.
@@ -166,6 +185,14 @@ There is no DOM manipulation, no CSS animation, and no JavaScript-driven per-pix
 | `u_thicknessRandom` | `float` | Per-wave thickness variation |
 | `u_verticalOffset` | `float` | Vertical shift from center (-0.5 to 0.5) |
 | `u_splitFill` | `float` | Rendering mode (0 = band, 1 = split fill) |
+| `u_glass` | `float` | Glass effect toggle (0 or 1) |
+| `u_liquidMetal` | `float` | Liquid Metal effect toggle (0 or 1) |
+| `u_lmRefraction` | `float` | Liquid Metal chromatic aberration |
+| `u_lmEdge` | `float` | Liquid Metal edge softness |
+| `u_lmPatternBlur` | `float` | Liquid Metal reflection smoothness |
+| `u_lmLiquid` | `float` | Liquid Metal flow intensity |
+| `u_lmSpeed` | `float` | Liquid Metal animation speed |
+| `u_lmPatternScale` | `float` | Liquid Metal surface curvature scale |
 
 ## Project Structure
 
