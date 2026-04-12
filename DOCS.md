@@ -108,6 +108,7 @@ All parameters are adjustable at runtime through the built-in control panel (top
 |-----------|-----|---------|-----|-----|------|-------------|
 | **Concentration** | `concentration` | `0` | 0 | 50 | 0.1 | Compresses wave distribution toward the vertical center. The wave range is calculated as `0.85 / (1 + concentration)`. At 0, waves span ~85% of screen height. At 50, waves occupy a narrow ~1.7% strip at the center. |
 | **Randomness** | `randomness` | `0` | 0 | 1 | 0.01 | Per-wave amplitude variation. Each wave gets a stable pseudo-random factor. The actual amplitude per wave is: `amplitude * (1 - randomness + randomness * random)` where `random` is 0–1 per wave. At 0, all waves are identical. At 1, waves range from 0 to full amplitude. |
+| **Thickness Random** | `thicknessRandom` | `0` | 0 | 1 | 0.01 | Per-wave thickness variation. Same formula as Randomness but applied to thickness: `thickness * (1 - thicknessRandom + thicknessRandom * random)`. Uses a different pseudo-random seed than amplitude randomness, so thickness and amplitude vary independently. |
 | **Vertical Offset** | `verticalOffset` | `0` | -0.5 | 0.5 | 0.01 | Shifts the entire wave group up or down from the screen center. At 0, waves are centered vertically. Positive values move waves up, negative values move them down. Works independently of and combines with Concentration. |
 
 ---
@@ -233,6 +234,7 @@ Complete list of uniforms passed from `WaveBackground.jsx` to `waveFragment.glsl
 | `u_blur` | `float` | Every frame | Wave edge softness |
 | `u_concentration` | `float` | Every frame | Wave vertical compression |
 | `u_randomness` | `float` | Every frame | Per-wave amplitude variation |
+| `u_thicknessRandom` | `float` | Every frame | Per-wave thickness variation |
 | `u_verticalOffset` | `float` | Every frame | Vertical shift from center (-0.5 to 0.5) |
 | `u_splitFill` | `float` | Every frame | Rendering mode (0.0 = band, 1.0 = split fill) |
 

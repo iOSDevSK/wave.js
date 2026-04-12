@@ -22,6 +22,7 @@ const DEFAULTS = {
   blur: 0.03,
   concentration: 0,
   randomness: 0,
+  thicknessRandom: 0,
   verticalOffset: 0,
 }
 
@@ -45,6 +46,7 @@ const SLIDER_DEFS = [
   { key: 'blur',      label: 'Blur', min: 0, max: 0.3, step: 0.001 },
   { key: 'concentration', label: 'Concentration', min: 0, max: 50, step: 0.1 },
   { key: 'randomness', label: 'Randomness', min: 0, max: 1, step: 0.01 },
+  { key: 'thicknessRandom', label: 'Thickness Random', min: 0, max: 1, step: 0.01 },
   { key: 'verticalOffset', label: 'Vertical Offset', min: -0.5, max: 0.5, step: 0.01 },
 ]
 

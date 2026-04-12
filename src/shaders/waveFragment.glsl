@@ -26,6 +26,7 @@ uniform float u_thickness;
 uniform float u_blur;
 uniform float u_concentration;
 uniform float u_randomness;
+uniform float u_thicknessRandom;
 uniform float u_verticalOffset;
 uniform float u_splitFill;
 
@@ -74,8 +75,12 @@ void main() {
 
     float waveY = baseY + wave;
 
+    // Per-wave thickness: thicknessRandom scales each wave differently
+    float thickRand = fract(sin(fi * 253.3 + u_seed * 197.1) * 43758.5453);
+    float thick = u_thickness * (1.0 - u_thicknessRandom + u_thicknessRandom * thickRand);
+
     // Edge calculation
-    float edgeWidth = u_thickness + u_blur;
+    float edgeWidth = thick + u_blur;
     float edge;
     if (u_splitFill > 0.5) {
       // Split fill: one-directional fill above wave line
