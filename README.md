@@ -2,6 +2,8 @@
 
 GPU-accelerated animated sine wave backgrounds for React. Built with Three.js and custom GLSL shaders. Runs at 60 FPS with minimal CPU usage.
 
+> **Full documentation with API reference, all examples, and architecture details: [DOCS.md](DOCS.md)**
+
 ## Features
 
 - Real-time sinusoidal wave animation rendered on the GPU via WebGL
