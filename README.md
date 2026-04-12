@@ -86,8 +86,8 @@ All parameters are adjustable at runtime via the built-in control panel (top-rig
 | Amplitude | `0.060` | 0 – 0.2 | Maximum wave height (vertical displacement) |
 | Frequency | `2.5` | 0.5 – 10 | Horizontal density of the sine curve |
 | Opacity | `0.60` | 0 – 1 | Wave layer transparency |
-| Thickness | `0.060` | 0.01 – 0.2 | Sharpness of the wave edge |
-| Blur | `0.030` | 0 – 0.3 | Softness / blur of wave edges |
+| Thickness | `0.060` | 0.01 – 0.2 | Width of the solid core of each wave. Makes waves visually wider. Does not affect edge softness. |
+| Blur | `0.030` | 0 – 0.3 | Soft fade zone on wave edges. At 0, edges are sharp. Higher values create smooth gradients. Applied after the solid core. |
 | Concentration | `0` | 0 – 50 | Compresses wave distribution toward the vertical center. At 0, waves are spread evenly across the full screen height. Higher values shrink the wave band into a narrow strip around the center. |
 | Randomness | `0` | 0 – 1 | Per-wave amplitude variation. At 0, all waves share the same amplitude. At 1, each wave gets a random amplitude between 0 and the Amplitude value. |
 | Thickness Random | `0` | 0 – 1 | Per-wave thickness variation. At 0, all waves share the same thickness. At 1, each wave gets a random thickness between 0 and the Thickness value. |

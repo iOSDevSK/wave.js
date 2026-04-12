@@ -89,27 +89,27 @@ All parameters are adjustable at runtime through the built-in control panel (top
 
 | Parameter | Key | Default | Min | Max | Step | Description |
 |-----------|-----|---------|-----|-----|------|-------------|
-| **Waves** | `waveCount` | `8` | 1 | 20 | 1 | Number of sine wave layers rendered. More waves = richer visual, slightly higher GPU cost. |
-| **Speed** | `speed` | `0.30` | 0 | 2 | 0.01 | Animation speed multiplier. At 0, waves freeze. At 2, waves animate at double speed. |
-| **Amplitude** | `amplitude` | `0.060` | 0 | 0.2 | 0.001 | Maximum vertical displacement of waves. At 0, waves are flat horizontal lines. This is the upper bound — actual per-wave amplitude may vary based on the Randomness parameter. |
-| **Frequency** | `frequency` | `2.5` | 0.5 | 10 | 0.1 | Horizontal density of the sine curve. Higher values = more oscillations visible on screen. |
+| **Waves** | `waveCount` | `8` | 1 | 20 | 1 | Number of sine wave layers rendered. More waves create a richer, denser visual. Each wave is a separate sine curve with its own phase offset, layered back-to-front with increasing opacity. Max 20 (hard limit in the shader loop). |
+| **Speed** | `speed` | `0.30` | 0 | 2 | 0.01 | Animation speed multiplier applied to the time uniform. At 0, all wave motion freezes completely. At 1, waves move at base speed. At 2, double speed. Each wave layer moves at a slightly different rate (`0.8 + waveIndex * 0.1`) for natural variation. |
+| **Amplitude** | `amplitude` | `0.060` | 0 | 0.2 | 0.001 | Maximum vertical displacement of wave sine curves. This is the upper bound — the actual amplitude per wave may be lower when Randomness > 0. At 0, all waves become perfectly flat horizontal lines. Each wave uses 3 layered harmonics (1x, 2x, 0.5x frequency) at 100%, 40%, and 60% of this amplitude. |
+| **Frequency** | `frequency` | `2.5` | 0.5 | 10 | 0.1 | Horizontal density of the sine curve, scaled by viewport aspect ratio. Higher values = more oscillations visible. The shader also generates harmonics at 2x and 0.5x this frequency for organic wave shapes. |
 
 ### Appearance
 
 | Parameter | Key | Default | Min | Max | Step | Description |
 |-----------|-----|---------|-----|-----|------|-------------|
-| **Opacity** | `opacity` | `0.60` | 0 | 1 | 0.01 | Global wave transparency. Each wave layer also has individual opacity that increases from back to front (25%–100% of this value). |
-| **Thickness** | `thickness` | `0.060` | 0.01 | 0.2 | 0.001 | Controls the sharpness of the wave edge transition. Higher = thicker, more visible wave edges. |
-| **Blur** | `blur` | `0.030` | 0 | 0.3 | 0.001 | Softness added to wave edges. Combined with Thickness to determine the total edge width (`edgeWidth = thickness + blur`). |
+| **Opacity** | `opacity` | `0.60` | 0 | 1 | 0.01 | Global wave opacity. This is the master transparency for all wave layers. Each wave also has individual layered opacity that increases from back (25% of this value) to front (100% of this value), creating natural depth. At 0, waves are invisible. At 1, front waves are fully opaque. |
+| **Thickness** | `thickness` | `0.060` | 0.01 | 0.2 | 0.001 | Width of the solid core of each wave band. This is the area where the wave color renders at full strength with a hard edge. Higher values make waves visually wider/thicker. In symmetric band mode, thickness expands the solid zone in both directions from the wave center. In split fill mode, it expands the solid fill below the wave line. Thickness does NOT affect edge softness — that is controlled by Blur. |
+| **Blur** | `blur` | `0.030` | 0 | 0.3 | 0.001 | Width of the soft fade zone on the edges of each wave. This is applied AFTER the solid core defined by Thickness. At 0, wave edges are perfectly sharp (hard cutoff). Higher values create a smooth gradient from full color to transparent on the wave boundary. Blur is always uniform across all waves, even when Thickness Random is active. |
 
 ### Distribution
 
 | Parameter | Key | Default | Min | Max | Step | Description |
 |-----------|-----|---------|-----|-----|------|-------------|
-| **Concentration** | `concentration` | `0` | 0 | 50 | 0.1 | Compresses wave distribution toward the vertical center. The wave range is calculated as `0.85 / (1 + concentration)`. At 0, waves span ~85% of screen height. At 50, waves occupy a narrow ~1.7% strip at the center. |
-| **Randomness** | `randomness` | `0` | 0 | 1 | 0.01 | Per-wave amplitude variation. Each wave gets a stable pseudo-random factor. The actual amplitude per wave is: `amplitude * (1 - randomness + randomness * random)` where `random` is 0–1 per wave. At 0, all waves are identical. At 1, waves range from 0 to full amplitude. |
-| **Thickness Random** | `thicknessRandom` | `0` | 0 | 1 | 0.01 | Per-wave thickness variation. Same formula as Randomness but applied to thickness: `thickness * (1 - thicknessRandom + thicknessRandom * random)`. Uses a different pseudo-random seed than amplitude randomness, so thickness and amplitude vary independently. |
-| **Vertical Offset** | `verticalOffset` | `0` | -0.5 | 0.5 | 0.01 | Shifts the entire wave group up or down from the screen center. At 0, waves are centered vertically. Positive values move waves up, negative values move them down. Works independently of and combines with Concentration. |
+| **Concentration** | `concentration` | `0` | 0 | 50 | 0.1 | Compresses the vertical range in which waves are distributed, centering them on screen. The range formula is `0.85 / (1 + concentration)`. At 0, waves span ~85% of screen height (0.075 to 0.925 in UV space). At 10, the range shrinks to ~0.077 (a narrow band at center). At 50, waves occupy ~1.7% of screen height. Waves are evenly spaced within this range. The band width of each wave also adapts — in symmetric mode, `halfExtent = range * 0.5 + thickness`, so concentrated waves have narrower bands. |
+| **Randomness** | `randomness` | `0` | 0 | 1 | 0.01 | Per-wave amplitude variation. Each wave gets a stable pseudo-random factor (seeded by wave index + `u_seed`, so it's consistent per session but different each page load). Formula: `amplitude * (1 - randomness + randomness * random)` where `random` is 0–1 per wave. At 0, all waves have identical amplitude. At 0.5, amplitudes range from 50% to 100% of max. At 1, amplitudes range from 0% to 100%. This creates organic variation where some waves are calm and others are active. |
+| **Thickness Random** | `thicknessRandom` | `0` | 0 | 1 | 0.01 | Per-wave thickness variation. Same formula as Randomness but applied to the solid core width: `thickness * (1 - thicknessRandom + thicknessRandom * random)`. Uses a different pseudo-random seed (`fi * 253.3 + seed * 197.1`) than amplitude randomness (`fi * 127.1 + seed * 311.7`), so thickness and amplitude vary independently — a thin wave can have high amplitude and vice versa. Only the solid core is randomized; the Blur fade zone remains uniform across all waves. |
+| **Vertical Offset** | `verticalOffset` | `0` | -0.5 | 0.5 | 0.01 | Shifts the entire wave group up or down from the vertical center of the screen. The wave center position is `0.5 + verticalOffset`. Positive values move waves toward the top, negative toward the bottom. At extremes (-0.5 or 0.5), the wave center is at the screen edge. Combines additively with Concentration — e.g. concentration=10 creates a narrow band, and verticalOffset=0.3 positions that band in the upper third of the screen. |
 
 ---
 
@@ -181,15 +181,17 @@ Click anywhere outside the picker popover to close it. The selected color and op
 Split Fill: [ ] (unchecked)
 ```
 
-Each wave renders color in a **symmetric band** centered on its wave position. The band extends equally above and below the wave line. The band width is:
+Each wave renders color in a **symmetric band** centered on its wave position. The band has two zones:
 
+1. **Solid core** — extends `thickness` beyond the base half-extent (`range * 0.5`). Full color, no fade.
+2. **Blur fade** — extends `blur` beyond the solid core. Smooth gradient from full color to transparent.
+
+```glsl
+halfExtent = range * 0.5 + thickness;
+edge = 1.0 - smoothstep(halfExtent, halfExtent + blur, dist);
 ```
-halfExtent = (range * 0.5) + edgeWidth
-```
 
-Where `range = 0.85 / (1 + concentration)` and `edgeWidth = thickness + blur`.
-
-At default settings (concentration 0), bands are wide (~0.5 screen height) and overlap significantly, creating a smooth gradient across the entire screen. At high concentration, bands shrink to narrow strips clustered at the center.
+At default settings (concentration 0), bands are wide and overlap significantly, creating a smooth gradient across the entire screen. At high concentration, bands shrink to narrow strips clustered at the center. When `blur = 0`, edges are perfectly hard. When `thickness = min`, the solid core is minimal and the wave is mostly defined by its blur fade.
 
 ### Split Fill
 
@@ -197,13 +199,16 @@ At default settings (concentration 0), bands are wide (~0.5 screen height) and o
 Split Fill: [x] (checked)
 ```
 
-Each wave fills color **upward** from its wave line position to the top of the screen:
+Each wave fills color **upward** from its wave line. The fill has two zones:
+
+1. **Solid fill** — everything above `waveY - thickness` is fully colored.
+2. **Blur fade** — from `waveY - thickness - blur` to `waveY - thickness`, color fades in from transparent.
 
 ```glsl
-edge = smoothstep(waveY - edgeWidth, waveY, uv.y);
+edge = smoothstep(waveY - thickness - blur, waveY - thickness, uv.y);
 ```
 
-This creates a layered "stacked fill" effect. With concentration, it produces a visible horizontal split — waves above the center are colored, below is the background. This mode is useful for creating sharp horizon-like divides.
+This creates a layered "stacked fill" effect. With concentration, it produces a visible horizontal split — colored above, background below. Useful for sharp horizon-like divides.
 
 ---
 
