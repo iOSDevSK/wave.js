@@ -47,87 +47,87 @@ async function toggleCheckbox(page, label) {
   await sleep(2000);
 
   // =============================================
-  console.log('\n--- 1. Metallic checkbox exists ---');
+  console.log('\n--- 1. Glass checkbox exists ---');
   // =============================================
-  const metallicLabel = page.locator('label:has(span:text-is("Metallic"))');
-  assert(await metallicLabel.isVisible(), 'Metallic label visible');
-  const metallicBox = metallicLabel.locator('div').first();
-  const defaultBg = await metallicBox.evaluate(el => el.style.background);
+  const glassLabel = page.locator('label:has(span:text-is("Glass"))');
+  assert(await glassLabel.isVisible(), 'Glass label visible');
+  const glassBox = glassLabel.locator('div').first();
+  const defaultBg = await glassBox.evaluate(el => el.style.background);
   assert(defaultBg === 'transparent', `Default unchecked (got ${defaultBg})`);
 
   // =============================================
   console.log('\n--- 2. Toggle on/off ---');
   // =============================================
-  await metallicBox.click();
+  await glassBox.click();
   await sleep(300);
-  const onBg = await metallicBox.evaluate(el => el.style.background);
-  assert(onBg.includes('rgba(255'), 'Metallic toggles on');
+  const onBg = await glassBox.evaluate(el => el.style.background);
+  assert(onBg.includes('rgba(255'), 'Glass toggles on');
 
-  await metallicBox.click();
+  await glassBox.click();
   await sleep(300);
-  const offBg = await metallicBox.evaluate(el => el.style.background);
-  assert(offBg === 'transparent', 'Metallic toggles off');
+  const offBg = await glassBox.evaluate(el => el.style.background);
+  assert(offBg === 'transparent', 'Glass toggles off');
 
   // =============================================
-  console.log('\n--- 3. Reset clears metallic ---');
+  console.log('\n--- 3. Reset clears glass ---');
   // =============================================
-  await metallicBox.click(); // on
+  await glassBox.click(); // on
   await clickReset(page);
-  const resetBg = await metallicBox.evaluate(el => el.style.background);
-  assert(resetBg === 'transparent', 'Reset clears metallic');
+  const resetBg = await glassBox.evaluate(el => el.style.background);
+  assert(resetBg === 'transparent', 'Reset clears glass');
 
   // =============================================
   console.log('\n--- 4. Visual comparison: off vs on ---');
   // =============================================
-  await screenshot(page, 'metal_01_off_default');
+  await screenshot(page, 'glass_01_off_default');
 
-  await toggleCheckbox(page, 'Metallic');
+  await toggleCheckbox(page, 'Glass');
   await sleep(500);
-  await screenshot(page, 'metal_02_on_default');
+  await screenshot(page, 'glass_02_on_default');
 
   // =============================================
-  console.log('\n--- 5. Metallic with different themes ---');
+  console.log('\n--- 5. Glass with different themes ---');
   // =============================================
   const themeButtons = page.locator('button[title]');
 
   await themeButtons.nth(0).click(); // pre-dawn
   await sleep(1800);
-  await screenshot(page, 'metal_03_predawn');
+  await screenshot(page, 'glass_03_predawn');
 
   await themeButtons.nth(4).click(); // sunset
   await sleep(1800);
-  await screenshot(page, 'metal_04_sunset');
+  await screenshot(page, 'glass_04_sunset');
 
   await themeButtons.nth(5).click(); // night
   await sleep(1800);
-  await screenshot(page, 'metal_05_night');
+  await screenshot(page, 'glass_05_night');
 
   // =============================================
-  console.log('\n--- 6. Metallic with high amplitude ---');
+  console.log('\n--- 6. Glass with high amplitude ---');
   // =============================================
   await clickReset(page);
-  await toggleCheckbox(page, 'Metallic');
+  await toggleCheckbox(page, 'Glass');
   await setSlider(page, 'Amplitude', 0.15);
   await setSlider(page, 'Frequency', 5);
   await sleep(500);
-  await screenshot(page, 'metal_06_high_amp');
+  await screenshot(page, 'glass_06_high_amp');
 
   // =============================================
-  console.log('\n--- 7. Metallic with concentration ---');
+  console.log('\n--- 7. Glass with concentration ---');
   // =============================================
   await setSlider(page, 'Concentration', 10);
   await sleep(500);
-  await screenshot(page, 'metal_07_concentrated');
+  await screenshot(page, 'glass_07_concentrated');
 
   // =============================================
-  console.log('\n--- 8. Metallic with many waves ---');
+  console.log('\n--- 8. Glass with many waves ---');
   // =============================================
   await clickReset(page);
-  await toggleCheckbox(page, 'Metallic');
+  await toggleCheckbox(page, 'Glass');
   await setSlider(page, 'Waves', 20);
   await setSlider(page, 'Amplitude', 0.1);
   await sleep(500);
-  await screenshot(page, 'metal_08_20waves');
+  await screenshot(page, 'glass_08_20waves');
 
   // =============================================
   console.log('\n--- 9. WebGL still working ---');
