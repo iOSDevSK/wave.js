@@ -42,6 +42,292 @@ const SLIDER_DEFS = [
   { key: 'blur',      label: 'Blur', min: 0, max: 0.3, step: 0.001 },
 ]
 
+// --- Color helpers ---
+function hexToHsv(hex) {
+  const r = parseInt(hex.slice(1, 3), 16) / 255
+  const g = parseInt(hex.slice(3, 5), 16) / 255
+  const b = parseInt(hex.slice(5, 7), 16) / 255
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min
+  let h = 0
+  if (d) {
+    if (max === r) h = ((g - b) / d + 6) % 6
+    else if (max === g) h = (b - r) / d + 2
+    else h = (r - g) / d + 4
+    h /= 6
+  }
+  return { h, s: max ? d / max : 0, v: max }
+}
+
+function hsvToHex(h, s, v) {
+  const f = (n) => {
+    const k = (n + h * 6) % 6
+    return v - v * s * Math.max(0, Math.min(k, 4 - k, 1))
+  }
+  const toHex = (x) => Math.round(x * 255).toString(16).padStart(2, '0')
+  return `#${toHex(f(0))}${toHex(f(2))}${toHex(f(4))}`
+}
+
+// --- Draggable bar helper ---
+function useBarDrag(onChange) {
+  const dragging = useRef(false)
+  const onPointerDown = (e) => {
+    dragging.current = true
+    e.currentTarget.setPointerCapture(e.pointerId)
+    update(e)
+  }
+  const onPointerMove = (e) => { if (dragging.current) update(e) }
+  const onPointerUp = () => { dragging.current = false }
+  const update = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    onChange(Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)))
+  }
+  return { onPointerDown, onPointerMove, onPointerUp }
+}
+
+// --- RGBA Color Picker ---
+function ColorSwatch({ color, opacity, onColorChange, onOpacityChange }) {
+  const [open, setOpen] = useState(false)
+  const [hsv, setHsv] = useState(() => hexToHsv(color))
+  const ref = useRef()
+  const areaRef = useRef()
+  const areaDragging = useRef(false)
+
+  // Sync HSV when color prop changes externally (e.g. theme switch)
+  const prevColor = useRef(color)
+  if (color !== prevColor.current) {
+    prevColor.current = color
+    const newHsv = hexToHsv(color)
+    if (hsvToHex(hsv.h, hsv.s, hsv.v) !== color) {
+      setHsv(newHsv)
+    }
+  }
+
+  useEffect(() => {
+    if (!open) return
+    const handleClick = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  const emitColor = (h, s, v) => {
+    setHsv({ h, s, v })
+    onColorChange(hsvToHex(h, s, v))
+  }
+
+  // SV area drag
+  const onAreaPointerDown = (e) => {
+    areaDragging.current = true
+    e.currentTarget.setPointerCapture(e.pointerId)
+    updateArea(e)
+  }
+  const onAreaPointerMove = (e) => { if (areaDragging.current) updateArea(e) }
+  const onAreaPointerUp = () => { areaDragging.current = false }
+  const updateArea = (e) => {
+    const rect = areaRef.current.getBoundingClientRect()
+    const s = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    const v = Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height))
+    emitColor(hsv.h, s, v)
+  }
+
+  const hueBind = useBarDrag((val) => emitColor(val, hsv.s, hsv.v))
+  const alphaBind = useBarDrag((val) => onOpacityChange(val))
+
+  const hueColor = hsvToHex(hsv.h, 1, 1)
+  const pickerSize = 160
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <div
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: 30, height: 30,
+          borderRadius: 6,
+          background: color,
+          opacity,
+          border: open ? '2px solid white' : '2px solid rgba(255,255,255,0.2)',
+          cursor: 'pointer',
+          transition: 'border-color 0.2s',
+        }}
+      />
+      {open && (
+        <div style={{
+          position: 'absolute',
+          top: 36,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(0,0,0,0.75)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: 10,
+          padding: 8,
+          zIndex: 30,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+          width: pickerSize + 16,
+        }}>
+          {/* SV area */}
+          <div
+            ref={areaRef}
+            onPointerDown={onAreaPointerDown}
+            onPointerMove={onAreaPointerMove}
+            onPointerUp={onAreaPointerUp}
+            style={{
+              position: 'relative',
+              width: pickerSize,
+              height: pickerSize * 0.75,
+              borderRadius: 6,
+              background: hueColor,
+              cursor: 'crosshair',
+              touchAction: 'none',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #fff, transparent)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #000, transparent)' }} />
+            {/* Thumb */}
+            <div style={{
+              position: 'absolute',
+              left: hsv.s * 100 + '%',
+              top: (1 - hsv.v) * 100 + '%',
+              width: 12, height: 12,
+              borderRadius: '50%',
+              border: '2px solid white',
+              boxShadow: '0 0 3px rgba(0,0,0,0.5)',
+              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'none',
+            }} />
+          </div>
+
+          {/* Hue bar */}
+          <div
+            {...hueBind}
+            style={{
+              position: 'relative',
+              width: pickerSize,
+              height: 12,
+              borderRadius: 6,
+              background: 'linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%)',
+              cursor: 'pointer',
+              touchAction: 'none',
+            }}
+          >
+            <div style={{
+              position: 'absolute',
+              left: hsv.h * 100 + '%',
+              top: '50%',
+              width: 14, height: 14,
+              borderRadius: '50%',
+              border: '2px solid white',
+              boxShadow: '0 0 3px rgba(0,0,0,0.5)',
+              background: hueColor,
+              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'none',
+            }} />
+          </div>
+
+          {/* Alpha bar */}
+          <div
+            {...alphaBind}
+            style={{
+              position: 'relative',
+              width: pickerSize,
+              height: 12,
+              borderRadius: 6,
+              background: `linear-gradient(to right, transparent, ${color})`,
+              cursor: 'pointer',
+              touchAction: 'none',
+            }}
+          >
+            {/* Checkerboard behind alpha */}
+            <div style={{
+              position: 'absolute', inset: 0, borderRadius: 6, zIndex: -1,
+              backgroundImage: 'repeating-conic-gradient(rgba(255,255,255,0.12) 0% 25%, transparent 0% 50%)',
+              backgroundSize: '8px 8px',
+            }} />
+            <div style={{
+              position: 'absolute',
+              left: opacity * 100 + '%',
+              top: '50%',
+              width: 14, height: 14,
+              borderRadius: '50%',
+              border: '2px solid white',
+              boxShadow: '0 0 3px rgba(0,0,0,0.5)',
+              background: color,
+              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'none',
+            }} />
+          </div>
+
+          {/* RGBA values */}
+          <div style={{ display: 'flex', gap: 4 }}>
+            {['R', 'G', 'B'].map((ch, ci) => {
+              const val = parseInt(color.slice(1 + ci * 2, 3 + ci * 2), 16)
+              return (
+                <div key={ch} style={{ flex: 1, textAlign: 'center' }}>
+                  <input
+                    type="number"
+                    min={0} max={255}
+                    value={val}
+                    onChange={(e) => {
+                      const v = Math.max(0, Math.min(255, parseInt(e.target.value) || 0))
+                      const parts = [
+                        parseInt(color.slice(1, 3), 16),
+                        parseInt(color.slice(3, 5), 16),
+                        parseInt(color.slice(5, 7), 16),
+                      ]
+                      parts[ci] = v
+                      const hex = '#' + parts.map(p => p.toString(16).padStart(2, '0')).join('')
+                      setHsv(hexToHsv(hex))
+                      onColorChange(hex)
+                    }}
+                    style={{
+                      width: '100%',
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: 4,
+                      color: 'white',
+                      fontSize: 11,
+                      textAlign: 'center',
+                      padding: '3px 0',
+                      fontFamily: 'monospace',
+                      outline: 'none',
+                    }}
+                  />
+                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{ch}</div>
+                </div>
+              )
+            })}
+            <div style={{ flex: 1, textAlign: 'center' }}>
+              <input
+                type="number"
+                min={0} max={100}
+                value={Math.round(opacity * 100)}
+                onChange={(e) => onOpacityChange(Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100)}
+                style={{
+                  width: '100%',
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: 4,
+                  color: 'white',
+                  fontSize: 11,
+                  textAlign: 'center',
+                  padding: '3px 0',
+                  fontFamily: 'monospace',
+                  outline: 'none',
+                }}
+              />
+              <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>A</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Slider({ label, value, min, max, step, onChange }) {
   const pct = ((value - min) / (max - min)) * 100
   return (
@@ -77,10 +363,14 @@ export default function HeroWave({ theme: themeProp, className, style, children 
   const containerRef = useRef()
   const mouseRef = useRef(new THREE.Vector2(0.5, 0.5))
   const [currentTheme, setCurrentTheme] = useState(themeProp || getTimeOfDay())
+  const [customColors, setCustomColors] = useState(null)
+  const [colorOpacities, setColorOpacities] = useState([1, 1, 1, 1])
   const [panelOpen, setPanelOpen] = useState(true)
   const [params, setParams] = useState({ ...DEFAULTS })
 
-  const colors = COLOR_THEMES[currentTheme] || COLOR_THEMES['sunrise']
+  const colors = currentTheme === 'custom' && customColors
+    ? customColors
+    : COLOR_THEMES[currentTheme] || COLOR_THEMES['sunrise']
 
   useEffect(() => {
     if (themeProp) return
@@ -102,7 +392,10 @@ export default function HeroWave({ theme: themeProp, className, style, children 
   }, [])
 
   const setParam = (key, value) => setParams(p => ({ ...p, [key]: value }))
-  const resetDefaults = () => setParams({ ...DEFAULTS })
+  const resetDefaults = () => {
+    setParams({ ...DEFAULTS })
+    setColorOpacities([1, 1, 1, 1])
+  }
 
   return (
     <div
@@ -118,7 +411,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
         style={{ position: 'absolute', inset: 0 }}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
       >
-        <WaveBackground colors={colors} mouse={mouseRef} params={params} />
+        <WaveBackground colors={colors} colorOpacities={colorOpacities} mouse={mouseRef} params={params} />
       </Canvas>
 
       {/* ---- Control Panel ---- */}
@@ -206,26 +499,22 @@ export default function HeroWave({ theme: themeProp, className, style, children 
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 6 }}>Custom Colors</div>
               <div style={{ display: 'flex', gap: 6 }}>
                 {colors.map((c, i) => (
-                  <label key={i} style={{ position: 'relative', cursor: 'pointer' }}>
-                    <div style={{
-                      width: 30, height: 30,
-                      borderRadius: 6,
-                      background: c,
-                      border: '2px solid rgba(255,255,255,0.2)',
-                    }} />
-                    <input
-                      type="color"
-                      value={c}
-                      onChange={(e) => {
-                        const newColors = [...colors]
-                        newColors[i] = e.target.value
-                        // Create a custom theme
-                        COLOR_THEMES['custom'] = newColors
-                        setCurrentTheme('custom')
-                      }}
-                      style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-                    />
-                  </label>
+                  <ColorSwatch
+                    key={i}
+                    color={c}
+                    opacity={colorOpacities[i]}
+                    onColorChange={(val) => {
+                      const newColors = [...colors]
+                      newColors[i] = val
+                      setCustomColors(newColors)
+                      setCurrentTheme('custom')
+                    }}
+                    onOpacityChange={(val) => {
+                      const newOpacities = [...colorOpacities]
+                      newOpacities[i] = val
+                      setColorOpacities(newOpacities)
+                    }}
+                  />
                 ))}
               </div>
             </div>

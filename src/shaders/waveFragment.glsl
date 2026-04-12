@@ -9,6 +9,11 @@ uniform vec3 u_color2;
 uniform vec3 u_color3;
 uniform vec3 u_color4;
 
+uniform float u_colorOpacity1;
+uniform float u_colorOpacity2;
+uniform float u_colorOpacity3;
+uniform float u_colorOpacity4;
+
 uniform vec2 u_mouse;
 
 // User-controllable params
@@ -33,8 +38,8 @@ void main() {
 
   int waveCount = int(u_waveCount);
 
-  // Start with background color
-  vec3 color = u_color1;
+  // Start with background color (blend toward black based on its opacity)
+  vec3 color = u_color1 * u_colorOpacity1;
 
   // Draw waves from back to front
   for (int i = 0; i < 20; i++) {
@@ -69,19 +74,26 @@ void main() {
     // Color — smooth gradient across all waves
     float colorMix = fi / max(float(waveCount) - 1.0, 1.0);
     vec3 waveColor;
+    float colorAlpha;
     if (colorMix < 0.333) {
-      waveColor = mix(u_color2, u_color3, colorMix * 3.0);
+      float t = colorMix * 3.0;
+      waveColor = mix(u_color2, u_color3, t);
+      colorAlpha = mix(u_colorOpacity2, u_colorOpacity3, t);
     } else if (colorMix < 0.666) {
-      waveColor = mix(u_color3, u_color4, (colorMix - 0.333) * 3.0);
+      float t = (colorMix - 0.333) * 3.0;
+      waveColor = mix(u_color3, u_color4, t);
+      colorAlpha = mix(u_colorOpacity3, u_colorOpacity4, t);
     } else {
-      waveColor = mix(u_color4, u_color2, (colorMix - 0.666) * 3.0);
+      float t = (colorMix - 0.666) * 3.0;
+      waveColor = mix(u_color4, u_color2, t);
+      colorAlpha = mix(u_colorOpacity4, u_colorOpacity2, t);
     }
 
     // Subtle brightness shimmer along wave
     float brightness = 0.95 + 0.1 * sin(uv.x * aspect * 3.0 + t * 0.5 + fi);
     waveColor *= brightness;
 
-    color = mix(color, waveColor, alpha);
+    color = mix(color, waveColor, alpha * colorAlpha);
   }
 
   // Film grain

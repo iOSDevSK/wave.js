@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import waveVertexShader from './shaders/waveVertex.glsl'
 import waveFragmentShader from './shaders/waveFragment.glsl'
 
-export default function WaveBackground({ colors, mouse, params }) {
+export default function WaveBackground({ colors, colorOpacities, mouse, params }) {
   const meshRef = useRef()
   const { viewport, size } = useThree()
 
@@ -16,6 +16,10 @@ export default function WaveBackground({ colors, mouse, params }) {
     u_color2: { value: new THREE.Color(colors[1]) },
     u_color3: { value: new THREE.Color(colors[2]) },
     u_color4: { value: new THREE.Color(colors[3]) },
+    u_colorOpacity1: { value: colorOpacities[0] },
+    u_colorOpacity2: { value: colorOpacities[1] },
+    u_colorOpacity3: { value: colorOpacities[2] },
+    u_colorOpacity4: { value: colorOpacities[3] },
     u_mouse: { value: new THREE.Vector2(0.5, 0.5) },
     u_waveCount: { value: params.waveCount },
     u_speed: { value: params.speed },
@@ -70,6 +74,10 @@ export default function WaveBackground({ colors, mouse, params }) {
     uniforms.u_opacity.value = params.opacity
     uniforms.u_thickness.value = params.thickness
     uniforms.u_blur.value = params.blur
+    uniforms.u_colorOpacity1.value = colorOpacities[0]
+    uniforms.u_colorOpacity2.value = colorOpacities[1]
+    uniforms.u_colorOpacity3.value = colorOpacities[2]
+    uniforms.u_colorOpacity4.value = colorOpacities[3]
   })
 
   const scale = 1.2
