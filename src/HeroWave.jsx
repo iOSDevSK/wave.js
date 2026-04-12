@@ -377,6 +377,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
   const [panelOpen, setPanelOpen] = useState(true)
   const [params, setParams] = useState({ ...DEFAULTS })
   const [splitFill, setSplitFill] = useState(false)
+  const [metallic, setMetallic] = useState(false)
 
   const colors = currentTheme === 'custom' && customColors
     ? customColors
@@ -408,6 +409,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
     setParams({ ...DEFAULTS })
     setColorOpacities([1, 1, 1, 1])
     setSplitFill(false)
+    setMetallic(false)
   }
 
   return (
@@ -424,7 +426,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
         style={{ position: 'absolute', inset: 0 }}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
       >
-        <WaveBackground colors={colors} colorOpacities={colorOpacities} mouse={mouseRef} params={params} splitFill={splitFill} />
+        <WaveBackground colors={colors} colorOpacities={colorOpacities} mouse={mouseRef} params={params} splitFill={splitFill} metallic={metallic} />
       </Canvas>
 
       {/* ---- Control Panel ---- */}
@@ -552,6 +554,28 @@ export default function HeroWave({ theme: themeProp, className, style, children 
                 )}
               </div>
               <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Split Fill</span>
+            </label>
+
+            {/* Metallic mode */}
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <div
+                onClick={() => setMetallic(v => !v)}
+                style={{
+                  width: 18, height: 18,
+                  borderRadius: 4,
+                  border: '1.5px solid rgba(255,255,255,0.25)',
+                  background: metallic ? 'rgba(255,255,255,0.25)' : 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                {metallic && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </div>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Metallic</span>
             </label>
 
             {/* Reset */}

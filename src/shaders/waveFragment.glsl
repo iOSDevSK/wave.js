@@ -29,6 +29,7 @@ uniform float u_randomness;
 uniform float u_thicknessRandom;
 uniform float u_verticalOffset;
 uniform float u_splitFill;
+uniform float u_metallic;
 
 varying vec2 v_uv;
 
@@ -117,6 +118,29 @@ void main() {
     // Subtle brightness shimmer along wave
     float brightness = 0.95 + 0.1 * sin(uv.x * aspect * 3.0 + t * 0.5 + fi);
     waveColor *= brightness;
+
+    // Metallic effect: specular highlights from wave surface slope
+    if (u_metallic > 0.5) {
+      // Compute wave derivative (surface slope)
+      float dx = 0.0;
+      dx += cos(uv.x * aspect * u_frequency + t * (0.8 + fi * 0.1) + phase) * amp * u_frequency * aspect;
+      dx += cos(uv.x * aspect * u_frequency * 2.0 - t * (0.5 + fi * 0.15) + phase * 2.0) * amp * 0.4 * u_frequency * 2.0 * aspect;
+      dx += cos(uv.x * aspect * u_frequency * 0.5 + t * (0.3 + fi * 0.05) + phase * 3.0) * amp * 0.6 * u_frequency * 0.5 * aspect;
+
+      // Specular highlight from slope (like light reflecting off surface)
+      float specular = pow(max(0.0, 1.0 - abs(dx) * 1.5), 8.0);
+
+      // Fresnel-like rim glow based on distance from wave center
+      float distFromWave = abs(uv.y - waveY);
+      float rimWidth = thick + u_blur * 0.5;
+      float rim = smoothstep(rimWidth, 0.0, distFromWave);
+      float fresnel = pow(1.0 - rim, 3.0) * rim * 4.0;
+
+      // Apply metallic: brighten highlights, darken shadows, add specular
+      vec3 highlight = mix(waveColor, vec3(1.0), 0.7);
+      waveColor = mix(waveColor * 0.7, highlight, specular * 0.6 + fresnel * 0.3);
+      waveColor += vec3(specular * 0.25);
+    }
 
     color = mix(color, waveColor, alpha * colorAlpha);
   }
