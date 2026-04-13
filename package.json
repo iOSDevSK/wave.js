@@ -1,24 +1,59 @@
 {
   "name": "wave.js",
-  "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "GPU-accelerated animated sine wave backgrounds. Vanilla JS + React. WebGL2 → Canvas 2D → CSS fallback. 60 FPS.",
+  "keywords": ["waves", "animation", "background", "webgl", "canvas", "shader", "gpu", "react", "vanilla"],
+  "author": "Filip Dvoran",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iOSDevSK/wave.js.git"
+  },
+  "homepage": "https://github.com/iOSDevSK/wave.js",
+  "bugs": {
+    "url": "https://github.com/iOSDevSK/wave.js/issues"
+  },
+  "main": "./dist/wave.js.cjs",
+  "module": "./dist/wave.js.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/wave.js.mjs",
+      "require": "./dist/wave.js.cjs"
+    },
+    "./react": {
+      "import": "./dist/react.mjs",
+      "require": "./dist/react.cjs"
+    }
+  },
+  "files": [
+    "dist/*.mjs",
+    "dist/*.cjs",
+    "dist/*.js",
+    "dist/*.map",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepublishOnly": "npm run build"
   },
-  "dependencies": {
-    "@react-three/fiber": "^9.5.0",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "three": "^0.183.2",
-    "vite-plugin-glsl": "^1.6.0"
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": true },
+    "react-dom": { "optional": true }
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@playwright/test": "^1.59.1",
+    "@react-three/fiber": "^9.5.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
@@ -26,6 +61,10 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
-    "vite": "^8.0.4"
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "three": "^0.183.2",
+    "vite": "^8.0.4",
+    "vite-plugin-glsl": "^1.6.0"
   }
 }

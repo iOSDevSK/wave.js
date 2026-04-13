@@ -1,197 +1,162 @@
 # wave.js
 
-GPU-accelerated animated sine wave backgrounds for React. Built with Three.js and custom GLSL shaders. Runs at 60 FPS with minimal CPU usage.
+GPU-accelerated animated sine wave backgrounds. Works with **vanilla JS** and **React**. Built with raw WebGL2 + custom GLSL shaders. Automatic fallback: WebGL2 → Canvas 2D → CSS gradient.
 
-> **Full documentation with API reference, all examples, and architecture details: [DOCS.md](DOCS.md)**
+> **Full documentation: [DOCS.md](DOCS.md)**
 
 ## Features
 
-- Real-time sinusoidal wave animation rendered on the GPU via WebGL
-- 12 adjustable parameters (wave count, speed, amplitude, frequency, opacity, thickness, blur, concentration, randomness, thickness randomness, vertical offset, rotation)
-- Thickness and blur in pixel units for intuitive control
+- **Zero dependencies** for vanilla JS (no Three.js, no React required)
+- WebGL2 GPU rendering at 60 FPS
+- Automatic fallback: WebGL2 → Canvas 2D (CPU) → CSS gradient (static)
+- 12 adjustable parameters (waves, speed, amplitude, frequency, opacity, thickness, blur, concentration, randomness, thickness randomness, vertical offset, rotation)
 - 6 built-in color themes with automatic time-of-day selection
-- Custom RGBA color picker with per-color opacity control
-- Wave concentration control — compress waves toward the screen center
-- Per-wave amplitude and thickness randomness for organic variation
-- Split Fill rendering mode toggle
-- Glass effect (transparency, refraction, caustics)
-- Liquid Metal effect with Liquify control (smooth 3D chrome with iridescent tint)
-- Rotation control (0–360°) around the screen center
+- Custom RGBA color picker with per-color opacity
+- Glass effect, Liquid Metal effect, Split Fill mode
+- Rotation (0–360°) around screen center
 - Mouse-reactive wave distortion
-- Smooth animated transitions between color themes
+- Smooth color transitions between themes
 - Film grain post-processing
-- Built-in control panel UI (toggleable, responsive on mobile)
-- Editable slider values — click any value to type a precise number
-- Fullscreen responsive layout
+- React component with built-in control panel (optional)
+- Responsive on mobile
 - Retina / HiDPI support
 
-## Quick Start
+## Installation
 
 ```bash
-npm install
-npm run dev -- --host 0.0.0.0
+npm install wave.js
 ```
 
-Open `http://localhost:5173` in your browser.
+## Vanilla JS
 
-## Usage
+```js
+import { WaveBackground } from 'wave.js'
 
-### Basic
+const wave = new WaveBackground(document.getElementById('hero'), {
+  theme: 'sunset',
+  waveCount: 12,
+  speed: 0.5,
+})
+
+// Update params at runtime
+wave.setParam('amplitude', 0.1)
+wave.setTheme('night')
+
+// Cleanup
+wave.destroy()
+```
+
+### Vanilla HTML
+
+```html
+<div id="hero" style="width: 100%; height: 100vh;"></div>
+<script type="module">
+  import { WaveBackground } from 'wave.js'
+  new WaveBackground('#hero', { theme: 'daytime' })
+</script>
+```
+
+## React
+
+```bash
+npm install wave.js react react-dom
+```
 
 ```jsx
-import HeroWave from './HeroWave'
+import { HeroWave } from 'wave.js/react'
 
 function App() {
   return (
-    <HeroWave>
+    <HeroWave theme="sunset">
       <h1>Your content here</h1>
     </HeroWave>
   )
 }
 ```
 
-### With a fixed color theme
+The React component includes a built-in control panel for adjusting all parameters at runtime.
 
-```jsx
-<HeroWave theme="sunset">
-  <h1>Sunset vibes</h1>
-</HeroWave>
-```
+## API
 
-Available themes: `pre-dawn`, `sunrise`, `daytime`, `dusk`, `sunset`, `night`
+### `new WaveBackground(container, options?)`
 
-### With custom styles
+Creates animated wave background in the given container element.
 
-```jsx
-<HeroWave
-  style={{ height: '50vh', borderRadius: 16 }}
-  className="my-hero"
->
-  <p>Half-height hero section</p>
-</HeroWave>
-```
+**container**: DOM element or CSS selector string.
 
-## Props
+**options**:
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `theme` | `string` | auto (time-of-day) | Color theme name. When omitted, automatically selects based on user's local time. |
-| `style` | `object` | `{}` | Inline styles applied to the container div. |
-| `className` | `string` | — | CSS class name for the container. |
-| `children` | `ReactNode` | — | Content rendered on top of the wave background. |
+| Option | Default | Description |
+|--------|---------|-------------|
+| `theme` | auto (time-of-day) | Color theme name |
+| `waveCount` | `8` | Number of wave layers (1–100) |
+| `speed` | `0.3` | Animation speed (0–2) |
+| `amplitude` | `0.06` | Wave height (0–0.2) |
+| `frequency` | `2.5` | Wave density (0.5–10) |
+| `opacity` | `0.6` | Wave transparency (0–1) |
+| `thickness` | `1` | Wave thickness in px (1–100) |
+| `blur` | `30` | Edge blur in px (0–200) |
+| `concentration` | `0` | Vertical compression (0–50) |
+| `randomness` | `0` | Per-wave amplitude variation (0–1) |
+| `thicknessRandom` | `0` | Per-wave thickness variation (0–1) |
+| `verticalOffset` | `0` | Vertical shift (-0.5–0.5) |
+| `rotation` | `0` | Rotation in degrees (0–360) |
+| `splitFill` | `false` | One-directional fill mode |
+| `glass` | `false` | Glass transparency effect |
+| `liquidMetal` | `false` | Chrome/metal effect |
+| `lmLiquid` | `0.07` | Liquid Metal flow intensity (0–0.2) |
+| `colorOpacities` | `[1,1,1,1]` | Per-color opacity array |
 
-## Parameters
+### Methods
 
-All parameters are adjustable at runtime via the built-in control panel (top-right corner). Click any slider value to type a precise number.
+| Method | Description |
+|--------|-------------|
+| `setTheme(name)` | Switch color theme with smooth transition |
+| `setColors(hexArray)` | Set custom colors `['#hex1', '#hex2', '#hex3', '#hex4']` |
+| `setParam(key, value)` | Update any parameter |
+| `setColorOpacities(arr)` | Set per-color opacity `[0-1, 0-1, 0-1, 0-1]` |
+| `setSplitFill(bool)` | Toggle split fill mode |
+| `setGlass(bool)` | Toggle glass effect |
+| `setLiquidMetal(bool)` | Toggle liquid metal effect |
+| `destroy()` | Remove canvas, stop animation, cleanup listeners |
 
-| Parameter | Default | Range | Description |
-|-----------|---------|-------|-------------|
-| Waves | `8` | 1 – 100 | Number of sine wave layers |
-| Speed | `0.30` | 0 – 2 | Animation speed multiplier |
-| Amplitude | `0.060` | 0 – 0.2 | Maximum wave height (vertical displacement) |
-| Frequency | `2.5` | 0.5 – 10 | Horizontal density of the sine curve |
-| Opacity | `0.60` | 0 – 1 | Wave layer transparency |
-| Thickness (px) | `1` | 1 – 100 | Width of the solid core of each wave in pixels |
-| Blur (px) | `30` | 0 – 200 | Soft fade zone on wave edges in pixels |
-| Concentration | `0` | 0 – 50 | Compresses wave distribution toward the vertical center |
-| Randomness | `0` | 0 – 1 | Per-wave amplitude variation |
-| Thickness Random | `0` | 0 – 1 | Per-wave thickness variation |
-| Vertical Offset | `0` | -0.5 – 0.5 | Shifts waves up or down from the screen center |
-| Rotation (°) | `0` | 0 – 360 | Rotates the entire wave pattern around the screen center |
+### Properties
 
-## Rendering Modes
+| Property | Description |
+|----------|-------------|
+| `renderMode` | Current renderer: `'webgl2'`, `'webgl'`, `'canvas2d'`, or `'css'` |
 
-### Symmetric Band (default)
+## Themes
 
-Each wave renders color in a symmetric band around its position. Thickness controls the solid core width in pixels, blur adds a soft fade zone beyond it.
+| Theme | Auto Time | Colors |
+|-------|-----------|--------|
+| `pre-dawn` | 05–08 | Purple, magenta, orange, gold |
+| `sunrise` | 08–11 | Purple, hot pink, orange, yellow |
+| `daytime` | 11–16 | Navy, blue, cyan, mint |
+| `dusk` | 16–20 | Purple, violet, lavender, light purple |
+| `sunset` | 20–23 | Purple, pink, coral, orange |
+| `night` | 23–05 | Near-black, dark purple, medium purple, violet |
 
-### Split Fill
+## Fallback Chain
 
-Toggle the **Split Fill** checkbox to enable one-directional fill mode. Each wave fills color upward from its wave line, creating a layered "stacked fill" look.
-
-### Glass
-
-Toggle the **Glass** checkbox for a transparent, refractive look with caustic highlights, Fresnel rim glow, and refraction-based color shifting.
-
-### Liquid Metal
-
-Toggle the **Liquid Metal** checkbox for a smooth 3D chrome effect with iridescent tint. One sub-parameter controls the effect:
-
-| Parameter | Default | Range | Description |
-|-----------|---------|-------|-------------|
-| Liquify | `0.07` | 0 – 0.2 | Flow intensity from simplex noise distortion |
-
-## Color Themes
-
-Each theme defines 4 colors: background, and 3 wave gradient stops.
-
-| Theme | Time | Colors |
-|-------|------|--------|
-| pre-dawn | 05–08 | Deep purple, magenta, orange, gold |
-| sunrise | 08–11 | Dark purple, hot pink, orange, yellow |
-| daytime | 11–16 | Navy, blue, cyan, mint |
-| dusk | 16–20 | Dark purple, violet, lavender, light purple |
-| sunset | 20–23 | Deep purple, pink, coral, orange |
-| night | 23–05 | Near-black, dark purple, medium purple, violet |
-
-When no `theme` prop is provided, the component automatically selects a theme based on the user's local time. Manually selecting a theme disables auto-selection until reset.
-
-## Custom Colors
-
-Click any of the 4 color swatches to open the RGBA color picker. The picker includes:
-
-- **Saturation / Brightness area** — drag to select color saturation and brightness
-- **Hue bar** — rainbow strip to select the base hue
-- **Alpha bar** — transparency slider with checkerboard background
-- **R, G, B, A inputs** — numeric fields for precise values (A is in %)
-
-Changing any custom color automatically switches to a "custom" theme that persists until manually changed.
-
-## How It Works
-
-The animation is rendered entirely on the GPU using a custom GLSL fragment shader. Each frame:
-
-1. Multiple sine waves with layered harmonics are computed per-pixel
-2. Each wave gets per-wave amplitude and thickness scaled by randomness parameters
-3. Wave positions are distributed within a range that shrinks with concentration
-4. Optional rotation is applied around the screen center
-5. Thickness and blur are converted from pixels to UV space using the viewport resolution
-6. Each wave renders as a symmetric color band (or one-directional fill in Split Fill mode)
-7. Waves are stacked back-to-front with increasing opacity
-8. Colors are interpolated across the wave stack using the 4-color gradient
-9. Mouse position subtly distorts wave shapes in real-time
-10. Film grain is added as a final post-processing pass
-
-There is no DOM manipulation, no CSS animation, and no JavaScript-driven per-pixel computation. The CPU only passes uniform values to the GPU each frame.
-
-## Dependencies
-
-| Package | Purpose |
-|---------|---------|
-| `react` | UI framework |
-| `three` | WebGL abstraction |
-| `@react-three/fiber` | React renderer for Three.js |
-| `vite-plugin-glsl` | GLSL shader imports in Vite |
-| `@playwright/test` | Browser testing (dev dependency) |
+| Environment | Renderer | Features |
+|-------------|----------|----------|
+| WebGL2/WebGL available | GPU shader | All effects (glass, liquid metal, film grain) |
+| No WebGL, Canvas available | Canvas 2D | Animated waves, colors, opacity (no glass/metal) |
+| No Canvas | CSS gradient | Static gradient background with theme colors |
 
 ## Browser Support
-
-Works in all browsers that support WebGL:
 
 - Chrome 56+
 - Firefox 51+
 - Safari 15+
 - Edge 79+
 
-Falls back gracefully if WebGL is unavailable (shows the background color).
-
 ## Build
 
 ```bash
 npm run build
 ```
-
-Output is in `dist/`.
 
 ## License
 
