@@ -195,7 +195,4 @@ Output is in `dist/`.
 
 ## License
 
-See LICENSE file for terms.
-
-Personal License: $5 USD — use in your own personal projects.
-Commercial License: $25 USD — use in client work, agency projects, SaaS products, or any commercial application.
+[MIT](LICENSE)
