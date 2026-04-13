@@ -40,7 +40,6 @@ export default function WaveBackground({ colors, colorOpacities, mouse, params, 
     u_lmEdge: { value: params.lmEdge },
     u_lmLiquid: { value: params.lmLiquid },
     u_lmSpeed: { value: params.lmSpeed },
-    u_lmPatternScale: { value: params.lmPatternScale },
   }), [])
 
   // Animate color transitions
@@ -99,7 +98,6 @@ export default function WaveBackground({ colors, colorOpacities, mouse, params, 
     uniforms.u_lmEdge.value = params.lmEdge
     uniforms.u_lmLiquid.value = params.lmLiquid
     uniforms.u_lmSpeed.value = params.lmSpeed
-    uniforms.u_lmPatternScale.value = params.lmPatternScale
     uniforms.u_colorOpacity1.value = colorOpacities[0]
     uniforms.u_colorOpacity2.value = colorOpacities[1]
     uniforms.u_colorOpacity3.value = colorOpacities[2]

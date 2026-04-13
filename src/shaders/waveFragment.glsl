@@ -36,7 +36,6 @@ uniform float u_lmRefraction;
 uniform float u_lmEdge;
 uniform float u_lmLiquid;
 uniform float u_lmSpeed;
-uniform float u_lmPatternScale;
 
 varying vec2 v_uv;
 
@@ -208,7 +207,7 @@ void main() {
       // Surface "normal" from wave slope and distance
       float lmT = u_time * u_lmSpeed;
       float dx = cos(uv.x * aspect * u_frequency + t * (0.8 + fi * 0.1) + phase) * amp;
-      float slope = dx * u_lmPatternScale;
+      float slope = dx * 2.0;
 
       // Simplex noise for organic liquid distortion
       float n1 = snoise(vec2(uv.x * aspect * 1.5 + fi, waveY * 4.0) - lmT * 0.5);

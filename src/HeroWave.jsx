@@ -30,7 +30,6 @@ const DEFAULTS = {
   lmEdge: 0.4,
   lmLiquid: 0.07,
   lmSpeed: 0.3,
-  lmPatternScale: 2.0,
 }
 
 function getTimeOfDay() {
@@ -664,7 +663,6 @@ export default function HeroWave({ theme: themeProp, className, style, children 
                   { key: 'lmEdge', label: 'Edge', min: 0, max: 1, step: 0.01 },
                   { key: 'lmLiquid', label: 'Liquify', min: 0, max: 0.2, step: 0.001 },
                   { key: 'lmSpeed', label: 'Metal Speed', min: 0, max: 0.5, step: 0.01 },
-                  { key: 'lmPatternScale', label: 'Pattern Scale', min: 0.5, max: 5, step: 0.1 },
                 ].map(s => (
                   <Slider
                     key={s.key}
