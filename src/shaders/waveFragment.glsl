@@ -28,6 +28,7 @@ uniform float u_concentration;
 uniform float u_randomness;
 uniform float u_thicknessRandom;
 uniform float u_verticalOffset;
+uniform float u_rotation;
 uniform float u_splitFill;
 uniform float u_glass;
 uniform float u_liquidMetal;
@@ -75,6 +76,17 @@ void main() {
   vec2 uv = v_uv;
   float aspect = u_resolution.x / u_resolution.y;
 
+  // Rotate UV around center
+  if (u_rotation != 0.0) {
+    vec2 center = vec2(0.5 * aspect, 0.5);
+    vec2 scaled = vec2(uv.x * aspect, uv.y);
+    float c = cos(u_rotation);
+    float s = sin(u_rotation);
+    vec2 d = scaled - center;
+    scaled = center + vec2(d.x * c - d.y * s, d.x * s + d.y * c);
+    uv = vec2(scaled.x / aspect, scaled.y);
+  }
+
   float t = u_time * u_speed;
 
   // Mouse influence
@@ -90,7 +102,7 @@ void main() {
   float startY = 0.5 + u_verticalOffset - range / 2.0;
 
   // Draw waves from back to front
-  for (int i = 0; i < 20; i++) {
+  for (int i = 0; i < 100; i++) {
     if (i >= waveCount) break;
 
     float fi = float(i);
@@ -116,19 +128,20 @@ void main() {
 
     // Per-wave thickness: thicknessRandom scales each wave differently
     float thickRand = fract(sin(fi * 253.3 + u_seed * 197.1) * 43758.5453);
-    float thick = u_thickness * (1.0 - u_thicknessRandom + u_thicknessRandom * thickRand);
+    float thickUV = u_thickness / u_resolution.y;
+    float blurUV = u_blur / u_resolution.y;
+    float thick = thickUV * (1.0 - u_thicknessRandom + u_thicknessRandom * thickRand);
 
     // Edge calculation
     // thick = solid core half-width, blur = soft fade width on edges
     float edge;
     if (u_splitFill > 0.5) {
       // Split fill: solid above (waveY - thick), blur zone below that
-      edge = smoothstep(waveY - thick - u_blur, waveY - thick, uv.y);
+      edge = smoothstep(waveY - thick - blurUV, waveY - thick, uv.y);
     } else {
       // Symmetric band: solid core of 'thick', then blur fade
-      float halfExtent = range * 0.5 + thick;
       float dist = abs(uv.y - waveY);
-      edge = 1.0 - smoothstep(halfExtent, halfExtent + u_blur, dist);
+      edge = 1.0 - smoothstep(thick, thick + blurUV, dist);
     }
 
     // Per-wave opacity — back waves more transparent, front more opaque
@@ -161,7 +174,7 @@ void main() {
     if (u_glass > 0.5) {
       float gDistFromWave = uv.y - waveY;
       float gAbsDist = abs(gDistFromWave);
-      float gBandWidth = thick + u_blur + 0.02;
+      float gBandWidth = thick + blurUV + 0.02;
 
       waveColor = mix(waveColor, color, 0.4);
 
@@ -187,7 +200,7 @@ void main() {
     if (u_liquidMetal > 0.5) {
       float mDist = uv.y - waveY;
       float absDist = abs(mDist);
-      float bandWidth = thick + u_blur + 0.02;
+      float bandWidth = thick + blurUV + 0.02;
       float normDist = clamp(absDist / bandWidth, 0.0, 1.0);
 
       // Edge softness

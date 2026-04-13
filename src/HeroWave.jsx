@@ -18,12 +18,13 @@ const DEFAULTS = {
   amplitude: 0.06,
   frequency: 2.5,
   opacity: 0.6,
-  thickness: 0.06,
-  blur: 0.03,
+  thickness: 1,
+  blur: 30,
   concentration: 0,
   randomness: 0,
   thicknessRandom: 0,
   verticalOffset: 0,
+  rotation: 0,
   // Liquid Metal params
   lmRefraction: 0.015,
   lmEdge: 0.4,
@@ -44,17 +45,18 @@ function getTimeOfDay() {
 }
 
 const SLIDER_DEFS = [
-  { key: 'waveCount', label: 'Waves', min: 1, max: 20, step: 1 },
+  { key: 'waveCount', label: 'Waves', min: 1, max: 100, step: 1 },
   { key: 'speed',     label: 'Speed', min: 0, max: 2, step: 0.01 },
   { key: 'amplitude', label: 'Amplitude', min: 0, max: 0.2, step: 0.001 },
   { key: 'frequency', label: 'Frequency', min: 0.5, max: 10, step: 0.1 },
   { key: 'opacity',   label: 'Opacity', min: 0, max: 1, step: 0.01 },
-  { key: 'thickness', label: 'Thickness', min: 0.01, max: 0.2, step: 0.001 },
-  { key: 'blur',      label: 'Blur', min: 0, max: 0.3, step: 0.001 },
+  { key: 'thickness', label: 'Thickness (px)', min: 1, max: 100, step: 1 },
+  { key: 'blur',      label: 'Blur (px)', min: 0, max: 200, step: 1 },
   { key: 'concentration', label: 'Concentration', min: 0, max: 50, step: 0.1 },
   { key: 'randomness', label: 'Randomness', min: 0, max: 1, step: 0.01 },
   { key: 'thicknessRandom', label: 'Thickness Random', min: 0, max: 1, step: 0.01 },
   { key: 'verticalOffset', label: 'Vertical Offset', min: -0.5, max: 0.5, step: 0.01 },
+  { key: 'rotation', label: 'Rotation (°)', min: 0, max: 360, step: 1 },
 ]
 
 // --- Color helpers ---
@@ -346,14 +348,42 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange, isMobile 
 }
 
 function Slider({ label, value, min, max, step, onChange }) {
+  const [editing, setEditing] = useState(false)
+  const [editVal, setEditVal] = useState('')
+  const decimals = step < 0.0001 ? 5 : step < 0.001 ? 4 : step < 0.01 ? 3 : step < 1 ? 2 : 0
   const pct = ((value - min) / (max - min)) * 100
   return (
     <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
         <span>{label}</span>
-        <span style={{ fontFamily: 'monospace', color: 'rgba(255,255,255,0.9)' }}>
-          {Number.isInteger(step) || step >= 1 ? value : value.toFixed(step < 0.01 ? 3 : 2)}
-        </span>
+        {editing ? (
+          <input
+            autoFocus
+            type="number"
+            min={min} max={max} step={step}
+            value={editVal}
+            onChange={e => setEditVal(e.target.value)}
+            onBlur={() => {
+              const v = parseFloat(editVal)
+              if (!isNaN(v)) onChange(Math.min(max, Math.max(min, v)))
+              setEditing(false)
+            }}
+            onKeyDown={e => { if (e.key === 'Enter') e.target.blur() }}
+            style={{
+              width: 60, fontFamily: 'monospace', fontSize: 12,
+              background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: 4, color: 'white', padding: '1px 4px', outline: 'none',
+              textAlign: 'right',
+            }}
+          />
+        ) : (
+          <span
+            onClick={(e) => { e.preventDefault(); setEditVal(decimals ? value.toFixed(decimals) : String(value)); setEditing(true) }}
+            style={{ fontFamily: 'monospace', color: 'rgba(255,255,255,0.9)', cursor: 'text', borderBottom: '1px dashed rgba(255,255,255,0.3)' }}
+          >
+            {decimals ? value.toFixed(decimals) : value}
+          </span>
+        )}
       </div>
       <input
         type="range"
