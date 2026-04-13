@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>wave.js — Vanilla JS Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000; color: white; }
+    #hero { width: 100%; height: 100vh; position: relative; overflow: hidden; }
+    .overlay { position: relative; z-index: 5; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: none; }
+    .overlay > * { pointer-events: auto; }
+    .overlay h1 { font-size: clamp(2rem, 6vw, 4.5rem); font-weight: 700; text-align: center; max-width: 800px; line-height: 1.1; text-shadow: 0 2px 40px rgba(0,0,0,0.3); margin: 0 24px; }
+    .overlay p { font-size: clamp(1rem, 2vw, 1.25rem); color: rgba(255,255,255,0.8); text-align: center; max-width: 600px; margin: 24px 24px 0; line-height: 1.5; }
+    .overlay .buttons { margin-top: 32px; display: flex; gap: 12px; }
+    .btn-primary { padding: 14px 28px; font-size: 1rem; font-weight: 600; border: none; border-radius: 999px; background: #635bff; color: white; cursor: pointer; font-family: inherit; }
+    .btn-secondary { padding: 14px 28px; font-size: 1rem; font-weight: 600; border: 1px solid rgba(255,255,255,0.3); border-radius: 999px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); color: white; cursor: pointer; font-family: inherit; }
+
+    /* Control panel — same design as React */
+    .panel-wrap { position: absolute; top: 16px; right: 16px; z-index: 20; }
+    .panel-toggle { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px; background: rgba(0,0,0,0.4); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: white; font-size: 13px; font-weight: 500; cursor: pointer; margin-left: auto; }
+    .panel { margin-top: 8px; width: 260px; max-height: calc(100vh - 80px); overflow-y: auto; background: rgba(0,0,0,0.5); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+    .panel.hidden { display: none; }
+    .slider-label { display: flex; justify-content: space-between; font-size: 12px; color: rgba(255,255,255,0.7); }
+    .slider-label span:last-child { font-family: monospace; color: rgba(255,255,255,0.9); }
+    .slider-wrap { display: flex; flex-direction: column; gap: 4px; }
+    input[type=range] { width: 100%; height: 4px; -webkit-appearance: none; appearance: none; border-radius: 2px; outline: none; cursor: pointer; }
+    .section-title { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 6px; }
+    .theme-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+    .theme-btn { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; padding: 0; transition: border-color 0.2s, transform 0.2s; }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; color: rgba(255,255,255,0.7); }
+    .checkbox { width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .checkbox.on { background: rgba(255,255,255,0.25); }
+    select.renderer-select { width: 100%; padding: 6px 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; color: white; font-size: 12px; cursor: pointer; outline: none; }
+    select.renderer-select option { background: #222; }
+    .reset-btn { padding: 7px 0; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: rgba(255,255,255,0.7); font-size: 12px; cursor: pointer; font-family: inherit; }
+
+    @media (max-width: 640px) {
+      .panel-wrap { top: 8px; right: 8px; left: 8px; }
+      .panel-toggle { width: 100%; }
+      .panel { width: 100%; border-radius: 10px; padding: 12px 14px; gap: 10px; max-height: calc(100vh - 60px); }
+    }
+  </style>
+</head>
+<body>
+  <div id="hero">
+    <div class="overlay">
+      <h1>Financial infrastructure to grow your revenue.</h1>
+      <p>Accept payments, offer financial services and implement custom revenue models.</p>
+      <div class="buttons">
+        <button class="btn-primary">Get started</button>
+        <button class="btn-secondary">Contact sales</button>
+      </div>
+    </div>
+    <div class="panel-wrap">
+      <button class="panel-toggle" id="togglePanel">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Controls
+      </button>
+      <div class="panel" id="panel"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import WaveBackground from './src/WaveBackground.js'
+    import { COLOR_THEMES, DEFAULTS, SLIDER_DEFS, getTimeOfDay } from './src/themes.js'
+
+    // State
+    const state = {
+      params: { ...DEFAULTS },
+      splitFill: false,
+      glass: false,
+      liquidMetal: false,
+      theme: getTimeOfDay(),
+    }
+
+    // Create wave background — same defaults as React
+    const wave = new WaveBackground('#hero')
+
+    // Toggle panel
+    const panel = document.getElementById('panel')
+    document.getElementById('togglePanel').addEventListener('click', () => {
+      panel.classList.toggle('hidden')
+    })
+
+    // Build sliders
+    SLIDER_DEFS.forEach(s => {
+      const wrap = document.createElement('div')
+      wrap.className = 'slider-wrap'
+      const decimals = s.step < 0.0001 ? 5 : s.step < 0.001 ? 4 : s.step < 0.01 ? 3 : s.step < 1 ? 2 : 0
+      const fmt = (v) => decimals ? Number(v).toFixed(decimals) : v
+      wrap.innerHTML = `<div class="slider-label"><span>${s.label}</span><span id="val-${s.key}">${fmt(state.params[s.key])}</span></div>
+        <input type="range" min="${s.min}" max="${s.max}" step="${s.step}" value="${state.params[s.key]}" id="slider-${s.key}">`
+      panel.appendChild(wrap)
+
+      const input = wrap.querySelector('input')
+      const valEl = wrap.querySelector(`#val-${s.key}`)
+      const updateBg = () => {
+        const pct = ((input.value - s.min) / (s.max - s.min)) * 100
+        input.style.background = `linear-gradient(to right, rgba(255,255,255,0.8) ${pct}%, rgba(255,255,255,0.15) ${pct}%)`
+      }
+      updateBg()
+      input.addEventListener('input', () => {
+        const v = parseFloat(input.value)
+        state.params[s.key] = v
+        wave.setParam(s.key, v)
+        valEl.textContent = fmt(v)
+        updateBg()
+      })
+    })
+
+    // Color themes
+    const themeSection = document.createElement('div')
+    themeSection.innerHTML = `<div class="section-title">Color Theme</div><div class="theme-buttons" id="themeButtons"></div>`
+    panel.appendChild(themeSection)
+    const themeButtons = document.getElementById('themeButtons')
+    Object.keys(COLOR_THEMES).forEach(name => {
+      const btn = document.createElement('button')
+      btn.className = 'theme-btn'
+      btn.title = name
+      btn.style.background = `linear-gradient(135deg, ${COLOR_THEMES[name][1]}, ${COLOR_THEMES[name][2]})`
+      btn.style.border = state.theme === name ? '2px solid white' : '2px solid rgba(255,255,255,0.15)'
+      btn.addEventListener('click', () => {
+        state.theme = name
+        wave.setTheme(name)
+        themeButtons.querySelectorAll('.theme-btn').forEach(b => b.style.border = '2px solid rgba(255,255,255,0.15)')
+        btn.style.border = '2px solid white'
+        btn.style.transform = 'scale(1.15)'
+        setTimeout(() => btn.style.transform = '', 200)
+      })
+      themeButtons.appendChild(btn)
+    })
+
+    // Checkboxes: Split Fill, Glass, Liquid Metal
+    ;[
+      { key: 'splitFill', label: 'Split Fill', setter: (v) => wave.setSplitFill(v) },
+      { key: 'glass', label: 'Glass', setter: (v) => wave.setGlass(v) },
+      { key: 'liquidMetal', label: 'Liquid Metal', setter: (v) => wave.setLiquidMetal(v) },
+    ].forEach(({ key, label, setter }) => {
+      const row = document.createElement('div')
+      row.className = 'checkbox-row'
+      row.innerHTML = `<div class="checkbox" id="cb-${key}"></div><span>${label}</span>`
+      row.addEventListener('click', () => {
+        state[key] = !state[key]
+        setter(state[key])
+        row.querySelector('.checkbox').className = state[key] ? 'checkbox on' : 'checkbox'
+        row.querySelector('.checkbox').innerHTML = state[key] ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''
+      })
+      panel.appendChild(row)
+    })
+
+    // Liquify slider (shown when Liquid Metal is on — always visible for simplicity)
+    const lmWrap = document.createElement('div')
+    lmWrap.className = 'slider-wrap'
+    lmWrap.style.paddingLeft = '8px'
+    lmWrap.style.borderLeft = '2px solid rgba(255,255,255,0.1)'
+    lmWrap.innerHTML = `<div class="slider-label"><span>Liquify</span><span id="val-lmLiquid">${DEFAULTS.lmLiquid.toFixed(3)}</span></div>
+      <input type="range" min="0" max="0.2" step="0.001" value="${DEFAULTS.lmLiquid}" id="slider-lmLiquid">`
+    panel.appendChild(lmWrap)
+    const lmInput = lmWrap.querySelector('input')
+    const lmVal = lmWrap.querySelector('#val-lmLiquid')
+    const updateLmBg = () => {
+      const pct = (lmInput.value / 0.2) * 100
+      lmInput.style.background = `linear-gradient(to right, rgba(255,255,255,0.8) ${pct}%, rgba(255,255,255,0.15) ${pct}%)`
+    }
+    updateLmBg()
+    lmInput.addEventListener('input', () => {
+      const v = parseFloat(lmInput.value)
+      wave.setParam('lmLiquid', v)
+      lmVal.textContent = v.toFixed(3)
+      updateLmBg()
+    })
+
+    // Renderer select
+    const rendererSection = document.createElement('div')
+    rendererSection.innerHTML = `<div class="section-title">Renderer</div>
+      <select class="renderer-select" id="rendererSelect">
+        <option value="webgl2">WebGL2 (GPU)</option>
+        <option value="canvas2d">Canvas 2D (CPU)</option>
+        <option value="css">CSS Gradient (Static)</option>
+      </select>`
+    panel.appendChild(rendererSection)
+    const rendererSelect = document.getElementById('rendererSelect')
+    rendererSelect.value = wave.renderMode
+    rendererSelect.addEventListener('change', (e) => {
+      wave.setRenderMode(e.target.value)
+    })
+
+    // Reset
+    const resetBtn = document.createElement('button')
+    resetBtn.className = 'reset-btn'
+    resetBtn.textContent = 'Reset to defaults'
+    resetBtn.addEventListener('click', () => {
+      Object.assign(state.params, DEFAULTS)
+      state.splitFill = false; state.glass = false; state.liquidMetal = false
+      wave.setSplitFill(false); wave.setGlass(false); wave.setLiquidMetal(false)
+      Object.keys(DEFAULTS).forEach(k => wave.setParam(k, DEFAULTS[k]))
+      state.theme = getTimeOfDay()
+      wave.setTheme(state.theme)
+      // Update all slider UIs
+      SLIDER_DEFS.forEach(s => {
+        const input = document.getElementById(`slider-${s.key}`)
+        const valEl = document.getElementById(`val-${s.key}`)
+        const decimals = s.step < 0.0001 ? 5 : s.step < 0.001 ? 4 : s.step < 0.01 ? 3 : s.step < 1 ? 2 : 0
+        if (input) { input.value = DEFAULTS[s.key]; const pct = ((DEFAULTS[s.key] - s.min) / (s.max - s.min)) * 100; input.style.background = `linear-gradient(to right, rgba(255,255,255,0.8) ${pct}%, rgba(255,255,255,0.15) ${pct}%)` }
+        if (valEl) valEl.textContent = decimals ? Number(DEFAULTS[s.key]).toFixed(decimals) : DEFAULTS[s.key]
+      })
+      lmInput.value = DEFAULTS.lmLiquid; lmVal.textContent = DEFAULTS.lmLiquid.toFixed(3); updateLmBg()
+      document.querySelectorAll('.checkbox').forEach(cb => { cb.className = 'checkbox'; cb.innerHTML = '' })
+      themeButtons.querySelectorAll('.theme-btn').forEach(b => b.style.border = '2px solid rgba(255,255,255,0.15)')
+    })
+    panel.appendChild(resetBtn)
+  </script>
+</body>
+</html>

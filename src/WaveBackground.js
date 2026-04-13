@@ -40,11 +40,13 @@ export default class WaveBackground {
     if (!COLOR_THEMES[name]) return
     this.theme = name
     this._animateColorsTo(COLOR_THEMES[name].map(hexToRgb))
+    if (this._renderMode === 'css') this._updateCSSGradient(COLOR_THEMES[name])
   }
 
   setColors(hexColors) {
     this.theme = 'custom'
     this._animateColorsTo(hexColors.map(hexToRgb))
+    if (this._renderMode === 'css') this._updateCSSGradient(hexColors)
   }
 
   setParam(key, value) { this.params[key] = value }
@@ -53,6 +55,47 @@ export default class WaveBackground {
   setSplitFill(v) { this.splitFill = v }
   setGlass(v) { this.glass = v }
   setLiquidMetal(v) { this.liquidMetal = v }
+
+  setRenderMode(mode) {
+    if (mode === this._renderMode) return
+    // Cleanup old renderer
+    if (this.renderer) this.renderer.destroy()
+    // Remove old canvas if switching to/from CSS
+    if (this.canvas && this.canvas.parentNode && mode === 'css') {
+      this.canvas.parentNode.removeChild(this.canvas)
+      this.canvas = null
+    }
+    // Recreate canvas if needed
+    if (!this.canvas && mode !== 'css') {
+      this._createCanvas()
+    }
+    if (mode === 'webgl2') {
+      const gl = this.canvas.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' })
+      if (gl) {
+        this.renderer = new WebGLRenderer(this.canvas, gl)
+        this._renderMode = mode
+        this._resize()
+        if (!this._raf) this._startLoop()
+        return
+      }
+    }
+    if (mode === 'canvas2d') {
+      // Need a fresh canvas for 2d context (can't reuse WebGL canvas)
+      if (this.canvas && this.canvas.parentNode) this.canvas.parentNode.removeChild(this.canvas)
+      this._createCanvas()
+      this.renderer = new Canvas2DRenderer(this.canvas)
+      this._renderMode = 'canvas2d'
+      this._resize()
+      if (!this._raf) this._startLoop()
+      return
+    }
+    if (mode === 'css') {
+      this._applyCSSFallback()
+      this._renderMode = 'css'
+      if (this._raf) { cancelAnimationFrame(this._raf); this._raf = null }
+      return
+    }
+  }
 
   destroy() {
     this._destroyed = true
@@ -75,16 +118,15 @@ export default class WaveBackground {
   }
 
   _createRenderer() {
-    // Try WebGL2 → WebGL1 → Canvas 2D → CSS fallback
-    let gl = this.canvas.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' })
-    if (!gl) gl = this.canvas.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'high-performance' })
+    // Try WebGL2 → Canvas 2D → CSS fallback
+    const gl = this.canvas.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' })
     if (gl) {
       try {
         this.renderer = new WebGLRenderer(this.canvas, gl)
-        this._renderMode = gl instanceof WebGL2RenderingContext ? 'webgl2' : 'webgl'
+        this._renderMode = 'webgl2'
         return
       } catch (e) {
-        console.warn('wave.js: WebGL init failed, falling back to Canvas 2D', e)
+        console.warn('wave.js: WebGL2 init failed, falling back to Canvas 2D', e)
       }
     }
     if (this.canvas.getContext('2d')) {
@@ -97,9 +139,13 @@ export default class WaveBackground {
     this._renderMode = 'css'
   }
 
+  _updateCSSGradient(hexColors) {
+    this.container.style.background = `linear-gradient(135deg, ${hexColors[0]}, ${hexColors[1]}, ${hexColors[2]}, ${hexColors[3]})`
+  }
+
   _applyCSSFallback() {
     const theme = COLOR_THEMES[this.theme] || COLOR_THEMES.sunrise
-    this.container.style.background = `linear-gradient(135deg, ${theme[0]}, ${theme[1]}, ${theme[2]}, ${theme[3]})`
+    this._updateCSSGradient(theme)
     if (this.canvas && this.canvas.parentNode) this.canvas.parentNode.removeChild(this.canvas)
     this.canvas = null
   }

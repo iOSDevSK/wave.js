@@ -138,6 +138,8 @@ export default function HeroWave({ theme: themeProp, className, style, children 
   const [glass, setGlass] = useState(false)
   const [liquidMetal, setLiquidMetal] = useState(false)
 
+  const [renderMode, setRenderMode] = useState('auto')
+
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 640)
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth <= 640)
@@ -156,8 +158,17 @@ export default function HeroWave({ theme: themeProp, className, style, children 
       theme: themeProp || getTimeOfDay(),
     })
     waveRef.current = wave
+    setRenderMode(wave.renderMode)
     return () => wave.destroy()
   }, [])
+
+  // Sync renderMode change
+  const handleRenderModeChange = (mode) => {
+    const w = waveRef.current
+    if (!w) return
+    w.setRenderMode(mode)
+    setRenderMode(w.renderMode)
+  }
 
   // Sync params to vanilla instance
   useEffect(() => {
@@ -259,6 +270,19 @@ export default function HeroWave({ theme: themeProp, className, style, children 
                 <Slider label="Liquify" value={params.lmLiquid} min={0} max={0.2} step={0.001} onChange={v => setParam('lmLiquid', v)} />
               </div>
             )}
+
+            <div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 6 }}>Renderer</div>
+              <select
+                value={renderMode}
+                onChange={e => handleRenderModeChange(e.target.value)}
+                style={{ width: '100%', padding: '6px 8px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, color: 'white', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', outline: 'none', appearance: 'none', WebkitAppearance: 'none' }}
+              >
+                <option value="webgl2" style={{ background: '#222' }}>WebGL2 (GPU)</option>
+                <option value="canvas2d" style={{ background: '#222' }}>Canvas 2D (CPU)</option>
+                <option value="css" style={{ background: '#222' }}>CSS Gradient (Static)</option>
+              </select>
+            </div>
 
             <button onClick={resetDefaults} style={{ padding: '7px 0', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: 'rgba(255,255,255,0.7)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
               Reset to defaults

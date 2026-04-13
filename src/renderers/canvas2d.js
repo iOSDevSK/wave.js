@@ -78,14 +78,9 @@ export class Canvas2DRenderer {
         ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`
         ctx.fill()
       } else {
-        ctx.strokeStyle = `rgba(${r},${g},${b},${alpha})`
         ctx.lineWidth = Math.max(p.thickness, 1)
-        if (p.blur > 0) {
-          ctx.shadowBlur = p.blur * 0.3
-          ctx.shadowColor = `rgba(${r},${g},${b},${alpha * 0.5})`
-        }
+        ctx.strokeStyle = `rgba(${r},${g},${b},${alpha})`
         ctx.stroke()
-        ctx.shadowBlur = 0
       }
     }
 
