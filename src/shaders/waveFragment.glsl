@@ -32,7 +32,6 @@ uniform float u_rotation;
 uniform float u_splitFill;
 uniform float u_glass;
 uniform float u_liquidMetal;
-uniform float u_lmRefraction;
 uniform float u_lmEdge;
 uniform float u_lmLiquid;
 uniform float u_lmSpeed;
@@ -237,13 +236,6 @@ void main() {
       float hueShift = envAngle * 0.5 + liquidSlope * 0.2;
       vec3 iridescentTint = mix(tint, tint.gbr, smoothstep(0.3, 0.7, hueShift));
       metalColor = mix(metalColor, metalColor * iridescentTint, 0.5 + envBright * 0.3);
-
-      // Chromatic aberration on edges
-      float refrOffset = u_lmRefraction * 30.0 * (1.0 - envBright);
-      float envR = sin((envAngle + refrOffset) * 3.14159);
-      float envB = sin((envAngle - refrOffset * 1.3) * 3.14159);
-      metalColor.r = mix(metalColor.r, pow(max(0.0, envR), 0.6) * 0.9, refrOffset * 2.0);
-      metalColor.b = mix(metalColor.b, pow(max(0.0, envB), 0.6) * 0.9, refrOffset * 2.0);
 
       // Broad specular highlight on crest
       float spec = pow(max(0.0, 1.0 - liquidDist * 2.5), 3.0);
