@@ -20,8 +20,15 @@ export class Canvas2DRenderer {
     ctx.fillStyle = `rgb(${bg[0] * 255 | 0},${bg[1] * 255 | 0},${bg[2] * 255 | 0})`
     ctx.fillRect(0, 0, W, H)
 
-    // Rotation
-    if (p.rotation) {
+    // Rotation — expand drawing area to cover full screen after rotation
+    const hasRotation = p.rotation !== 0
+    let drawW = W, drawH = H, offsetX = 0, offsetY = 0
+    if (hasRotation) {
+      const diag = Math.sqrt(W * W + H * H)
+      drawW = diag
+      drawH = diag
+      offsetX = (diag - W) / 2
+      offsetY = (diag - H) / 2
       ctx.save()
       ctx.translate(W / 2, H / 2)
       ctx.rotate(p.rotation * Math.PI / 180)
@@ -31,7 +38,7 @@ export class Canvas2DRenderer {
     const range = 0.85 / (1 + p.concentration)
     const startY = 0.5 + p.verticalOffset - range / 2
     const waveCount = Math.min(p.waveCount, 100)
-    const step = Math.max(2, Math.ceil(W / 400))
+    const step = Math.max(2, Math.ceil(drawW / 400))
 
     for (let i = 0; i < waveCount; i++) {
       const fi = i
@@ -59,7 +66,9 @@ export class Canvas2DRenderer {
       const alpha = layerAlpha * colorAlpha
 
       ctx.beginPath()
-      for (let px = 0; px <= W; px += step) {
+      const startPx = hasRotation ? -offsetX : 0
+      const endPx = hasRotation ? W + offsetX : W
+      for (let px = startPx; px <= endPx; px += step) {
         const x = px / W
         const xa = x * aspect
         let wave = Math.sin(xa * p.frequency + time * (0.8 + fi * 0.1) + phase) * amp
@@ -67,13 +76,13 @@ export class Canvas2DRenderer {
         wave += Math.sin(xa * p.frequency * 0.5 + time * (0.3 + fi * 0.05) + phase * 3) * amp * 0.6
         wave += mouseInf * Math.sin(xa * 3 + fi) * 0.3
         const y = (1 - baseY - wave) * H
-        if (px === 0) ctx.moveTo(px, y)
+        if (px === startPx) ctx.moveTo(px, y)
         else ctx.lineTo(px, y)
       }
 
       if (s.splitFill) {
-        ctx.lineTo(W, 0)
-        ctx.lineTo(0, 0)
+        ctx.lineTo(endPx, -offsetY)
+        ctx.lineTo(startPx, -offsetY)
         ctx.closePath()
         ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`
         ctx.fill()
@@ -84,7 +93,7 @@ export class Canvas2DRenderer {
       }
     }
 
-    if (p.rotation) ctx.restore()
+    if (hasRotation) ctx.restore()
   }
 
   resize(w, h) {
