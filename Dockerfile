@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN npm run build
+RUN npx vite build --config vite.config.deploy.js
 
 # Production stage
 FROM nginx:alpine
