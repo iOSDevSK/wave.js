@@ -20,7 +20,7 @@ function useBarDrag(onChange) {
 }
 
 // --- RGBA Color Picker ---
-function ColorSwatch({ color, opacity, onColorChange, onOpacityChange, isMobile }) {
+function ColorSwatch({ color, opacity, onColorChange, onOpacityChange, isMobile, panelRef }) {
   const [open, setOpen] = useState(false)
   const [hsv, setHsv] = useState(() => hexToHsv(color))
   const ref = useRef()
@@ -43,6 +43,16 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange, isMobile 
     return () => document.removeEventListener('mousedown', handleClick)
   }, [open])
 
+  // Close popup when panel scrolls (desktop fixed positioning)
+  useEffect(() => {
+    if (!open || isMobile) return
+    const panel = panelRef?.current
+    if (!panel) return
+    const onScroll = () => setOpen(false)
+    panel.addEventListener('scroll', onScroll)
+    return () => panel.removeEventListener('scroll', onScroll)
+  }, [open, isMobile, panelRef])
+
   const emitColor = (h, s, v) => { setHsv({ h, s, v }); onColorChange(hsvToHex(h, s, v)) }
   const onAreaPointerDown = (e) => { areaDragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); updateArea(e) }
   const onAreaPointerMove = (e) => { if (areaDragging.current) updateArea(e) }
@@ -59,11 +69,27 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange, isMobile 
   const currentColor = hsvToHex(hsv.h, hsv.s, hsv.v)
   const pickerSize = 160
 
+  // Compute fixed position for desktop popup, clamped within panel bounds
+  let fixedPos = {}
+  if (open && !isMobile && ref.current) {
+    const swatchRect = ref.current.getBoundingClientRect()
+    const popupW = pickerSize + 16
+    let top = swatchRect.bottom + 4
+    let left = swatchRect.left
+    if (panelRef?.current) {
+      const panelRect = panelRef.current.getBoundingClientRect()
+      if (left + popupW > panelRect.right - 8) left = panelRect.right - 8 - popupW
+      if (left < panelRect.left + 8) left = panelRect.left + 8
+      if (top + popupW > panelRect.bottom - 8) top = swatchRect.top - popupW - 4
+    }
+    fixedPos = { top, left }
+  }
+
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <div onClick={() => setOpen(o => !o)} style={{ width: 30, height: 30, borderRadius: 6, background: color, opacity, border: open ? '2px solid white' : '2px solid rgba(255,255,255,0.2)', cursor: 'pointer', transition: 'border-color 0.2s' }} />
       {open && (
-        <div style={{ position: isMobile ? 'fixed' : 'absolute', ...(isMobile ? { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' } : { top: 36, left: 0 }), background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: 8, zIndex: 100, display: 'flex', flexDirection: 'column', gap: 8, width: isMobile ? 'min(80vw, 260px)' : pickerSize + 16 }}>
+        <div style={{ position: 'fixed', ...(isMobile ? { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' } : fixedPos), background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: 8, zIndex: 100, display: 'flex', flexDirection: 'column', gap: 8, width: isMobile ? 'min(80vw, 260px)' : pickerSize + 16 }}>
           <div ref={areaRef} onPointerDown={onAreaPointerDown} onPointerMove={onAreaPointerMove} onPointerUp={onAreaPointerUp} style={{ position: 'relative', width: '100%', aspectRatio: '4/3', borderRadius: 6, background: hueColor, cursor: 'crosshair', touchAction: 'none', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #fff, transparent)' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #000, transparent)' }} />
@@ -128,6 +154,7 @@ function Slider({ label, value, min, max, step, onChange }) {
 export default function HeroWave({ theme: themeProp, className, style, children }) {
   const containerRef = useRef()
   const waveRef = useRef(null)
+  const panelRef = useRef()
   const [currentTheme, setCurrentTheme] = useState(themeProp || getTimeOfDay())
   const userPickedTheme = useRef(false)
   const [customColors, setCustomColors] = useState(null)
@@ -226,7 +253,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
         </button>
 
         {panelOpen && (
-          <div style={{ marginTop: 8, width: isMobile ? '100%' : 260, maxHeight: isMobile ? 'calc(100vh - 60px)' : 'calc(100vh - 80px)', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: isMobile ? 10 : 14, padding: isMobile ? '12px 14px' : '16px 18px', display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 14 }}>
+          <div ref={panelRef} style={{ marginTop: 8, width: isMobile ? '100%' : 260, maxHeight: isMobile ? 'calc(100vh - 60px)' : 'calc(100vh - 80px)', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: isMobile ? 10 : 14, padding: isMobile ? '12px 14px' : '16px 18px', display: 'flex', flexDirection: 'column', gap: isMobile ? 10 : 14 }}>
             {SLIDER_DEFS.map(s => (
               <Slider key={s.key} label={s.label} value={params[s.key]} min={s.min} max={s.max} step={s.step} onChange={v => setParam(s.key, v)} />
             ))}
@@ -244,7 +271,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 6 }}>Custom Colors</div>
               <div style={{ display: 'flex', gap: 6 }}>
                 {colors.map((c, i) => (
-                  <ColorSwatch key={i} color={c} opacity={colorOpacities[i]} isMobile={isMobile} onColorChange={(val) => {
+                  <ColorSwatch key={i} color={c} opacity={colorOpacities[i]} isMobile={isMobile} panelRef={panelRef} onColorChange={(val) => {
                     const newColors = [...colors]; newColors[i] = val; setCustomColors(newColors)
                     userPickedTheme.current = true; setCurrentTheme('custom')
                   }} onOpacityChange={(val) => {
