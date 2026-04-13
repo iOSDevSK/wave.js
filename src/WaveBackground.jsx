@@ -38,7 +38,6 @@ export default function WaveBackground({ colors, colorOpacities, mouse, params, 
     u_liquidMetal: { value: liquidMetal ? 1.0 : 0.0 },
     u_lmRefraction: { value: params.lmRefraction },
     u_lmEdge: { value: params.lmEdge },
-    u_lmPatternBlur: { value: params.lmPatternBlur },
     u_lmLiquid: { value: params.lmLiquid },
     u_lmSpeed: { value: params.lmSpeed },
     u_lmPatternScale: { value: params.lmPatternScale },
@@ -98,7 +97,6 @@ export default function WaveBackground({ colors, colorOpacities, mouse, params, 
     uniforms.u_liquidMetal.value = liquidMetal ? 1.0 : 0.0
     uniforms.u_lmRefraction.value = params.lmRefraction
     uniforms.u_lmEdge.value = params.lmEdge
-    uniforms.u_lmPatternBlur.value = params.lmPatternBlur
     uniforms.u_lmLiquid.value = params.lmLiquid
     uniforms.u_lmSpeed.value = params.lmSpeed
     uniforms.u_lmPatternScale.value = params.lmPatternScale

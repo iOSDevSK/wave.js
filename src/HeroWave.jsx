@@ -28,7 +28,6 @@ const DEFAULTS = {
   // Liquid Metal params
   lmRefraction: 0.015,
   lmEdge: 0.4,
-  lmPatternBlur: 0.005,
   lmLiquid: 0.07,
   lmSpeed: 0.3,
   lmPatternScale: 2.0,
@@ -663,7 +662,6 @@ export default function HeroWave({ theme: themeProp, className, style, children 
                 {[
                   { key: 'lmRefraction', label: 'Refraction', min: 0, max: 0.03, step: 0.001 },
                   { key: 'lmEdge', label: 'Edge', min: 0, max: 1, step: 0.01 },
-                  { key: 'lmPatternBlur', label: 'Pattern Blur', min: 0, max: 0.02, step: 0.001 },
                   { key: 'lmLiquid', label: 'Liquify', min: 0, max: 0.2, step: 0.001 },
                   { key: 'lmSpeed', label: 'Metal Speed', min: 0, max: 0.5, step: 0.01 },
                   { key: 'lmPatternScale', label: 'Pattern Scale', min: 0.5, max: 5, step: 0.1 },

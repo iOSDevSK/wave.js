@@ -34,7 +34,6 @@ uniform float u_glass;
 uniform float u_liquidMetal;
 uniform float u_lmRefraction;
 uniform float u_lmEdge;
-uniform float u_lmPatternBlur;
 uniform float u_lmLiquid;
 uniform float u_lmSpeed;
 uniform float u_lmPatternScale;
@@ -222,13 +221,13 @@ void main() {
       liquidDist = clamp(liquidDist, 0.0, 1.0);
 
       // Fake environment reflection: smooth gradient based on "reflected" angle
-      float envAngle = liquidSlope * 0.3 + mDist / bandWidth * 0.5 + n1 * u_lmPatternBlur * 8.0;
+      float envAngle = liquidSlope * 0.3 + mDist / bandWidth * 0.5;
       envAngle = envAngle * 0.5 + 0.5; // normalize to 0-1
       envAngle = clamp(envAngle, 0.0, 1.0);
 
       // Smooth environment: dark -> mid -> bright -> mid
       float envCurve = sin(envAngle * 3.14159) ;
-      float envBright = pow(envCurve, 0.6 + u_lmPatternBlur * 10.0);
+      float envBright = pow(envCurve, 0.6);
 
       // Base chrome from environment
       vec3 metalColor = mix(vec3(0.02, 0.02, 0.03), vec3(0.95, 0.93, 0.98), envBright);
