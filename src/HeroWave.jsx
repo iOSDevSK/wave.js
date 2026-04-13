@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
 import WaveBackground from './WaveBackground'
@@ -171,8 +171,7 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange }) {
         <div style={{
           position: 'absolute',
           top: 36,
-          left: '50%',
-          transform: 'translateX(-50%)',
+          right: 0,
           background: 'rgba(0,0,0,0.75)',
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(255,255,255,0.15)',
@@ -387,6 +386,13 @@ export default function HeroWave({ theme: themeProp, className, style, children 
   const [glass, setGlass] = useState(false)
   const [liquidMetal, setLiquidMetal] = useState(false)
 
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 640)
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 640)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
   const colors = currentTheme === 'custom' && customColors
     ? customColors
     : COLOR_THEMES[currentTheme] || COLOR_THEMES['sunrise']
@@ -441,15 +447,17 @@ export default function HeroWave({ theme: themeProp, className, style, children 
       {/* ---- Control Panel ---- */}
       <div style={{
         position: 'absolute',
-        top: 16,
-        right: 16,
+        top: isMobile ? 8 : 16,
+        right: isMobile ? 8 : 16,
+        left: isMobile ? 8 : 'auto',
         zIndex: 20,
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}>
         <button
           onClick={() => setPanelOpen(o => !o)}
           style={{
-            display: 'flex', alignItems: 'center', gap: 6,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            width: isMobile ? '100%' : 'auto',
             padding: '8px 14px',
             background: 'rgba(0,0,0,0.4)',
             backdropFilter: 'blur(12px)',
@@ -459,7 +467,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
             fontSize: 13,
             fontWeight: 500,
             cursor: 'pointer',
-            marginLeft: 'auto',
+            marginLeft: isMobile ? 0 : 'auto',
           }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -471,15 +479,18 @@ export default function HeroWave({ theme: themeProp, className, style, children 
         {panelOpen && (
           <div style={{
             marginTop: 8,
-            width: 260,
+            width: isMobile ? '100%' : 260,
+            maxHeight: isMobile ? 'calc(100vh - 60px)' : 'calc(100vh - 80px)',
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
             background: 'rgba(0,0,0,0.5)',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 14,
-            padding: '16px 18px',
+            borderRadius: isMobile ? 10 : 14,
+            padding: isMobile ? '12px 14px' : '16px 18px',
             display: 'flex',
             flexDirection: 'column',
-            gap: 14,
+            gap: isMobile ? 10 : 14,
           }}>
             {/* Sliders */}
             {SLIDER_DEFS.map(s => (
