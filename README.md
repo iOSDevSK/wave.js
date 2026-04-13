@@ -1,4 +1,4 @@
-# Waves JS
+# wave.js
 
 GPU-accelerated animated sine wave backgrounds for React. Built with Three.js and custom GLSL shaders. Runs at 60 FPS with minimal CPU usage.
 

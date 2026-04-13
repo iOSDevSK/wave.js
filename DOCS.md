@@ -1,4 +1,4 @@
-# Waves JS — Full Documentation
+# wave.js — Full Documentation
 
 Complete API reference, usage examples, and integration guide.
 
@@ -25,8 +25,8 @@ Complete API reference, usage examples, and integration guide.
 ## Installation
 
 ```bash
-git clone https://github.com/iOSDevSK/waves.js.git
-cd waves.js
+git clone https://github.com/iOSDevSK/wave.js.git
+cd wave.js
 npm install
 ```
 

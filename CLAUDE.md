@@ -1,7 +1,7 @@
-# Waves JS
+# wave.js
 
 ## Repository
-- GitHub: https://github.com/iOSDevSK/waves.js
+- GitHub: https://github.com/iOSDevSK/wave.js
 - Branch: main
 
 ## Dev Server
