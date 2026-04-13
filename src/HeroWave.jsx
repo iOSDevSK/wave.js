@@ -100,7 +100,7 @@ function useBarDrag(onChange) {
 }
 
 // --- RGBA Color Picker ---
-function ColorSwatch({ color, opacity, onColorChange, onOpacityChange }) {
+function ColorSwatch({ color, opacity, onColorChange, onOpacityChange, isMobile }) {
   const [open, setOpen] = useState(false)
   const [hsv, setHsv] = useState(() => hexToHsv(color))
   const ref = useRef()
@@ -169,19 +169,21 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange }) {
       />
       {open && (
         <div style={{
-          position: 'absolute',
-          top: 36,
-          right: 0,
-          background: 'rgba(0,0,0,0.75)',
+          position: isMobile ? 'fixed' : 'absolute',
+          ...(isMobile
+            ? { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+            : { top: 36, right: 0 }
+          ),
+          background: 'rgba(0,0,0,0.85)',
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(255,255,255,0.15)',
           borderRadius: 10,
           padding: 8,
-          zIndex: 30,
+          zIndex: 100,
           display: 'flex',
           flexDirection: 'column',
           gap: 8,
-          width: pickerSize + 16,
+          width: isMobile ? 'min(80vw, 260px)' : pickerSize + 16,
         }}>
           {/* SV area */}
           <div
@@ -191,8 +193,8 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange }) {
             onPointerUp={onAreaPointerUp}
             style={{
               position: 'relative',
-              width: pickerSize,
-              height: pickerSize * 0.75,
+              width: '100%',
+              aspectRatio: '4/3',
               borderRadius: 6,
               background: hueColor,
               cursor: 'crosshair',
@@ -221,7 +223,7 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange }) {
             {...hueBind}
             style={{
               position: 'relative',
-              width: pickerSize,
+              width: '100%',
               height: 12,
               borderRadius: 6,
               background: 'linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%)',
@@ -248,7 +250,7 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange }) {
             {...alphaBind}
             style={{
               position: 'relative',
-              width: pickerSize,
+              width: '100%',
               height: 12,
               borderRadius: 6,
               background: `linear-gradient(to right, transparent, ${currentColor})`,
@@ -538,6 +540,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
                     key={i}
                     color={c}
                     opacity={colorOpacities[i]}
+                    isMobile={isMobile}
                     onColorChange={(val) => {
                       const newColors = [...colors]
                       newColors[i] = val
