@@ -36,9 +36,7 @@ export default function WaveBackground({ colors, colorOpacities, mouse, params, 
     u_splitFill: { value: splitFill ? 1.0 : 0.0 },
     u_glass: { value: glass ? 1.0 : 0.0 },
     u_liquidMetal: { value: liquidMetal ? 1.0 : 0.0 },
-    u_lmEdge: { value: params.lmEdge },
     u_lmLiquid: { value: params.lmLiquid },
-    u_lmSpeed: { value: params.lmSpeed },
   }), [])
 
   // Animate color transitions
@@ -93,9 +91,7 @@ export default function WaveBackground({ colors, colorOpacities, mouse, params, 
     uniforms.u_splitFill.value = splitFill ? 1.0 : 0.0
     uniforms.u_glass.value = glass ? 1.0 : 0.0
     uniforms.u_liquidMetal.value = liquidMetal ? 1.0 : 0.0
-    uniforms.u_lmEdge.value = params.lmEdge
     uniforms.u_lmLiquid.value = params.lmLiquid
-    uniforms.u_lmSpeed.value = params.lmSpeed
     uniforms.u_colorOpacity1.value = colorOpacities[0]
     uniforms.u_colorOpacity2.value = colorOpacities[1]
     uniforms.u_colorOpacity3.value = colorOpacities[2]

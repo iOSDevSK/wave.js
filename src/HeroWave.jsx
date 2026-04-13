@@ -26,9 +26,7 @@ const DEFAULTS = {
   verticalOffset: 0,
   rotation: 0,
   // Liquid Metal params
-  lmEdge: 0.4,
   lmLiquid: 0.07,
-  lmSpeed: 0.3,
 }
 
 function getTimeOfDay() {
@@ -658,9 +656,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
             {liquidMetal && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingLeft: 8, borderLeft: '2px solid rgba(255,255,255,0.1)' }}>
                 {[
-                  { key: 'lmEdge', label: 'Edge', min: 0, max: 1, step: 0.01 },
                   { key: 'lmLiquid', label: 'Liquify', min: 0, max: 0.2, step: 0.001 },
-                  { key: 'lmSpeed', label: 'Metal Speed', min: 0, max: 0.5, step: 0.01 },
                 ].map(s => (
                   <Slider
                     key={s.key}

@@ -32,9 +32,7 @@ uniform float u_rotation;
 uniform float u_splitFill;
 uniform float u_glass;
 uniform float u_liquidMetal;
-uniform float u_lmEdge;
 uniform float u_lmLiquid;
-uniform float u_lmSpeed;
 
 varying vec2 v_uv;
 
@@ -201,10 +199,10 @@ void main() {
       float normDist = clamp(absDist / bandWidth, 0.0, 1.0);
 
       // Edge softness
-      float edgeMask = smoothstep(1.0, 1.0 - u_lmEdge * 0.5, normDist);
+      float edgeMask = smoothstep(1.0, 0.8, normDist);
 
       // Surface "normal" from wave slope and distance
-      float lmT = u_time * u_lmSpeed;
+      float lmT = u_time * 0.3;
       float dx = cos(uv.x * aspect * u_frequency + t * (0.8 + fi * 0.1) + phase) * amp;
       float slope = dx * 2.0;
 
