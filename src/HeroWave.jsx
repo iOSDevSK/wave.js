@@ -380,6 +380,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
   const containerRef = useRef()
   const mouseRef = useRef(new THREE.Vector2(0.5, 0.5))
   const [currentTheme, setCurrentTheme] = useState(themeProp || getTimeOfDay())
+  const userPickedTheme = useRef(false)
   const [customColors, setCustomColors] = useState(null)
   const [colorOpacities, setColorOpacities] = useState([1, 1, 1, 1])
   const [panelOpen, setPanelOpen] = useState(true)
@@ -402,7 +403,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
   useEffect(() => {
     if (themeProp) return
     const interval = setInterval(() => {
-      setCurrentTheme(prev => prev === 'custom' ? prev : getTimeOfDay())
+      if (!userPickedTheme.current) setCurrentTheme(getTimeOfDay())
     }, 60000)
     return () => clearInterval(interval)
   }, [themeProp])
@@ -427,6 +428,8 @@ export default function HeroWave({ theme: themeProp, className, style, children 
     setSplitFill(false)
     setGlass(false)
     setLiquidMetal(false)
+    userPickedTheme.current = false
+    setCurrentTheme(getTimeOfDay())
   }
 
   return (
@@ -514,7 +517,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
                 {Object.keys(COLOR_THEMES).map((name) => (
                   <button
                     key={name}
-                    onClick={() => setCurrentTheme(name)}
+                    onClick={() => { userPickedTheme.current = true; setCurrentTheme(name) }}
                     style={{
                       width: 30, height: 30,
                       borderRadius: '50%',
@@ -545,6 +548,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
                       const newColors = [...colors]
                       newColors[i] = val
                       setCustomColors(newColors)
+                      userPickedTheme.current = true
                       setCurrentTheme('custom')
                     }}
                     onOpacityChange={(val) => {
