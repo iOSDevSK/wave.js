@@ -281,6 +281,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
                 <option value="webgl2" style={{ background: '#222' }}>WebGL2 (GPU)</option>
                 <option value="canvas2d" style={{ background: '#222' }}>Canvas 2D (CPU)</option>
                 <option value="css" style={{ background: '#222' }}>CSS Gradient (Static)</option>
+                <option value="none" style={{ background: '#222' }}>None (Solid Color)</option>
               </select>
             </div>
 

@@ -24,6 +24,7 @@ export default class WaveBackground {
     this.seed = Math.random() * 100
     this._colorTransition = null
     this._destroyed = false
+    this._preferredRenderer = options.renderer || 'auto'
 
     this._createCanvas()
     this._createRenderer()
@@ -41,12 +42,14 @@ export default class WaveBackground {
     this.theme = name
     this._animateColorsTo(COLOR_THEMES[name].map(hexToRgb))
     if (this._renderMode === 'css') this._updateCSSGradient(COLOR_THEMES[name])
+    if (this._renderMode === 'none') this.container.style.background = COLOR_THEMES[name][0]
   }
 
   setColors(hexColors) {
     this.theme = 'custom'
     this._animateColorsTo(hexColors.map(hexToRgb))
     if (this._renderMode === 'css') this._updateCSSGradient(hexColors)
+    if (this._renderMode === 'none') this.container.style.background = hexColors[0]
   }
 
   setParam(key, value) { this.params[key] = value }
@@ -95,6 +98,12 @@ export default class WaveBackground {
       if (this._raf) { cancelAnimationFrame(this._raf); this._raf = null }
       return
     }
+    if (mode === 'none') {
+      this._applyNoneFallback()
+      this._renderMode = 'none'
+      if (this._raf) { cancelAnimationFrame(this._raf); this._raf = null }
+      return
+    }
   }
 
   destroy() {
@@ -118,7 +127,15 @@ export default class WaveBackground {
   }
 
   _createRenderer() {
-    // Try WebGL2 → Canvas 2D → CSS fallback
+    const pref = this._preferredRenderer
+
+    // If user specified a specific renderer, use it directly
+    if (pref && pref !== 'auto') {
+      this.setRenderMode(pref)
+      return
+    }
+
+    // Auto: Try WebGL2 → Canvas 2D → CSS fallback
     const gl = this.canvas.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' })
     if (gl) {
       try {
@@ -146,6 +163,13 @@ export default class WaveBackground {
   _applyCSSFallback() {
     const theme = COLOR_THEMES[this.theme] || COLOR_THEMES.sunrise
     this._updateCSSGradient(theme)
+    if (this.canvas && this.canvas.parentNode) this.canvas.parentNode.removeChild(this.canvas)
+    this.canvas = null
+  }
+
+  _applyNoneFallback() {
+    const theme = COLOR_THEMES[this.theme] || COLOR_THEMES.sunrise
+    this.container.style.background = theme[0]
     if (this.canvas && this.canvas.parentNode) this.canvas.parentNode.removeChild(this.canvas)
     this.canvas = null
   }
