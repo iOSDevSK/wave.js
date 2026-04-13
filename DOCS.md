@@ -1,4 +1,4 @@
-# SinWaves — Full Documentation
+# Waves JS — Full Documentation
 
 Complete API reference, usage examples, and integration guide.
 
@@ -26,7 +26,7 @@ Complete API reference, usage examples, and integration guide.
 
 ```bash
 git clone <repo-url>
-cd waves-component
+cd wavesjs
 npm install
 ```
 

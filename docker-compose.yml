@@ -1,5 +1,5 @@
 services:
-  waves-component:
+  wavesjs:
     build: .
     ports:
       - "3000:80"
