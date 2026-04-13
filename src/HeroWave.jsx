@@ -169,7 +169,7 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange, isMobile 
           position: isMobile ? 'fixed' : 'absolute',
           ...(isMobile
             ? { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
-            : { top: 36, right: 0 }
+            : { top: 36, left: 0 }
           ),
           background: 'rgba(0,0,0,0.85)',
           backdropFilter: 'blur(20px)',
