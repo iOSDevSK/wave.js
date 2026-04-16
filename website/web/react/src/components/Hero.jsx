@@ -299,8 +299,6 @@ export default function Hero({ activePreset, onPresetApplied }) {
   const [liquidMetal, setLiquidMetal] = useState(DEFAULT_PRESET.liquidMetal)
   const [renderMode, setRenderMode] = useState(DEFAULT_PRESET.renderer)
   const [panelOpen, setPanelOpen] = useState(true)
-  const panelWrapRef = useRef()
-  const [panelTopPx, setPanelTopPx] = useState(null)
 
   const colors = currentTheme === 'custom' && customColors
     ? customColors
@@ -480,20 +478,6 @@ export default function Hero({ activePreset, onPresetApplied }) {
     onPresetApplied?.()
   }, [activePreset])
 
-  // Lock panel Y position after first render (centered), so collapse doesn't shift it
-  useEffect(() => {
-    if (panelTopPx != null || !panelWrapRef.current) return
-    requestAnimationFrame(() => {
-      const el = panelWrapRef.current
-      if (!el) return
-      const rect = el.getBoundingClientRect()
-      const parentRect = el.offsetParent?.getBoundingClientRect()
-      if (parentRect) {
-        setPanelTopPx(rect.top - parentRect.top)
-      }
-    })
-  }, [panelTopPx])
-
   // Auto time-of-day
   useEffect(() => {
     const interval = setInterval(() => {
@@ -517,7 +501,7 @@ export default function Hero({ activePreset, onPresetApplied }) {
       <div className="relative z-20 w-full max-w-7xl mx-auto px-6">
 
         {/* Left: Copy */}
-        <div className="max-w-3xl flex flex-col items-center lg:items-start text-center lg:text-left">
+        <div className="max-w-3xl mx-auto xl:mx-0 flex flex-col items-center xl:items-start text-center xl:text-left">
           <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono mb-8 transition-colors ${
             renderMode === 'webgl2'
               ? 'bg-blue/10 border border-blue/20 text-teal'
@@ -536,7 +520,7 @@ export default function Hero({ activePreset, onPresetApplied }) {
             {renderMode === 'webgl2' ? 'GPU-accelerated WebGL rendering' : `Renderer: ${renderMode === 'canvas2d' ? 'Canvas 2D (CPU)' : renderMode === 'css' ? 'CSS Gradient' : 'None'}`}
           </div>
 
-          <h1 className="font-display font-bold text-5xl sm:text-6xl lg:text-8xl tracking-tighter leading-[0.9]">
+          <h1 className="font-display font-bold text-5xl sm:text-6xl xl:text-8xl tracking-tighter leading-[0.9]">
             <span className="text-transparent bg-clip-text bg-gradient-to-b from-white via-white/90 to-white/30">
               Mesmerizing wave{' '}
             </span>
@@ -552,34 +536,34 @@ export default function Hero({ activePreset, onPresetApplied }) {
             GPU-accelerated animated sine wave backgrounds. Liquid metal, frosted glass, split fill effects — MIT licensed, zero dependencies.
           </p>
 
-          {/* CTAs */}
-          <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-            <div className="w-full sm:w-auto relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-teal to-blue rounded blur opacity-20 group-hover:opacity-50 transition duration-500" />
-              <div className="relative flex items-center bg-wave-panel border border-white/10 rounded px-4 py-3 cursor-text">
-                <span className="text-muted mr-3 font-mono text-sm">$</span>
-                <code className="font-mono text-sm text-zinc-300">npm install wave.js</code>
-                <button onClick={handleCopy} className="ml-6 text-zinc-500 hover:text-white transition-colors" title="Copy to clipboard">
-                  {copied ? <Check size={18} className="text-teal" /> : <Copy size={18} />}
-                </button>
+          {/* CTAs + Customize Parameters */}
+          <div className="mt-10 flex flex-col gap-4 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="w-full sm:w-auto relative group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-teal to-blue rounded blur opacity-20 group-hover:opacity-50 transition duration-500" />
+                <div className="relative flex items-center bg-wave-panel border border-white/10 rounded px-4 py-3 cursor-text">
+                  <span className="text-muted mr-3 font-mono text-sm">$</span>
+                  <code className="font-mono text-sm text-zinc-300">npm install wave.js</code>
+                  <button onClick={handleCopy} className="ml-6 text-zinc-500 hover:text-white transition-colors" title="Copy to clipboard">
+                    {copied ? <Check size={18} className="text-teal" /> : <Copy size={18} />}
+                  </button>
+                </div>
               </div>
+              <a href="#features" className="w-full sm:w-auto px-8 py-3.5 bg-white text-black text-sm font-semibold tracking-wide rounded hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2 group shadow-[0_0_30px_-5px_rgba(255,255,255,0.4)]">
+                Get Started
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </a>
             </div>
-            <a href="#features" className="w-full sm:w-auto px-8 py-3.5 bg-white text-black text-sm font-semibold tracking-wide rounded hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2 group shadow-[0_0_30px_-5px_rgba(255,255,255,0.4)]">
-              Get Started
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            <a
+              href="#params-mobile"
+              className="xl:hidden w-full flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium text-teal border border-teal/30 bg-teal/10 active:bg-teal/20 transition-colors"
+            >
+              <Faders size={16} /> Customize Parameters
             </a>
           </div>
 
-          {/* Mobile: Button to scroll to params */}
-          <a
-            href="#params-mobile"
-            className="md:hidden mt-4 w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-medium text-teal border border-teal/30 bg-teal/10 active:bg-teal/20 transition-colors"
-          >
-            <Faders size={16} /> Customize Parameters
-          </a>
-
           {/* Trust Bar */}
-          <div className="mt-8 lg:mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 text-[10px] sm:text-xs font-mono text-muted/60 uppercase tracking-widest">
+          <div className="mt-8 xl:mt-12 flex flex-wrap items-center justify-center xl:justify-start gap-4 sm:gap-6 text-[10px] sm:text-xs font-mono text-muted/60 uppercase tracking-widest">
             <span className="flex items-center gap-2"><ShieldCheck size={14} /> MIT Licensed</span>
             <span className="hidden sm:inline text-white/20">|</span>
             <span className="flex items-center gap-2"><Gauge size={14} /> 60fps</span>
@@ -591,20 +575,20 @@ export default function Hero({ activePreset, onPresetApplied }) {
         </div>
 
         {/* Desktop: Parameters Panel — absolute */}
-        <div ref={panelWrapRef} className="absolute right-6 hidden md:block" style={{ width: '22%', top: panelTopPx != null ? panelTopPx : '50%', transform: panelTopPx != null ? 'none' : 'translateY(-50%)' }}>
+        <div className="absolute right-6 hidden xl:block" style={{ width: '22%', top: '5rem', maxHeight: 'calc(100vh - 6rem)', overflowY: 'auto' }}>
           {renderPanel(false)}
         </div>
       </div>
 
       {/* Scroll */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center gap-2 text-zinc-500 z-20">
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 hidden xl:flex flex-col items-center gap-2 text-zinc-500 z-20">
         <span className="text-[10px] font-mono tracking-widest uppercase">Scroll</span>
         <CaretDown size={16} className="animate-bounce" />
       </div>
     </section>
 
     {/* Mobile: Parameters Panel — below hero, full width */}
-    <div id="params-mobile" className="md:hidden relative z-20 pb-8 overflow-hidden scroll-mt-[72px] w-full px-6">
+    <div id="params-mobile" className="xl:hidden relative z-20 pt-8 pb-8 overflow-hidden scroll-mt-[80px] w-full px-6">
       {renderPanel(true)}
     </div>
     </>
