@@ -23,17 +23,17 @@ const codeVanilla = [
     { text: ', {' },
   ]},
   { type: 'code', parts: [
-    { text: '    theme:     ' },
+    { text: '\u00A0\u00A0theme:\u00A0\u00A0\u00A0\u00A0\u00A0' },
     { cls: 'token-string', text: "'sunset'" },
     { text: ',' },
   ]},
   { type: 'code', parts: [
-    { text: '    waveCount: ' },
+    { text: '\u00A0\u00A0waveCount:\u00A0' },
     { cls: 'token-number', text: '12' },
     { text: ',' },
   ]},
   { type: 'code', parts: [
-    { text: '    speed:     ' },
+    { text: '\u00A0\u00A0speed:\u00A0\u00A0\u00A0\u00A0\u00A0' },
     { cls: 'token-number', text: '0.5' },
     { text: ',' },
   ]},
@@ -57,31 +57,31 @@ const codeReact = [
     { text: '() {' },
   ]},
   { type: 'code', parts: [
-    { text: '    ' },
+    { text: '\u00A0\u00A0' },
     { cls: 'token-keyword', text: 'return' },
     { text: ' (' },
   ]},
   { type: 'code', parts: [
-    { text: '        <' },
+    { text: '\u00A0\u00A0\u00A0\u00A0<' },
     { cls: 'token-function', text: 'HeroWave' },
     { text: ' theme=' },
     { cls: 'token-string', text: '"sunset"' },
     { text: '>' },
   ]},
   { type: 'code', parts: [
-    { text: '            <' },
+    { text: '\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0<' },
     { cls: 'token-function', text: 'h1' },
     { text: '>Your Content</' },
     { cls: 'token-function', text: 'h1' },
     { text: '>' },
   ]},
   { type: 'code', parts: [
-    { text: '        </' },
+    { text: '\u00A0\u00A0\u00A0\u00A0</' },
     { cls: 'token-function', text: 'HeroWave' },
     { text: '>' },
   ]},
   { type: 'code', parts: [
-    { text: '    )' },
+    { text: '\u00A0\u00A0)' },
   ]},
   { type: 'code', parts: [{ text: '}' }] },
 ]

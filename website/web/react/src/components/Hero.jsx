@@ -539,7 +539,7 @@ export default function Hero({ activePreset, onPresetApplied }) {
             <span className="text-gradient-accent">backgrounds.</span>
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-b from-white via-white/90 to-white/30">
-              One line of code.
+              Zero dependencies.
             </span>
           </h1>
 
