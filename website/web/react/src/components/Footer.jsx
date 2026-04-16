@@ -14,7 +14,7 @@ export default function Footer() {
           <div className="flex gap-6 text-sm font-medium text-muted">
             <a href="https://github.com/iOSDevSK/wave.js" target="_blank" rel="noopener noreferrer" className="hover:text-teal transition-colors">GitHub</a>
             <a href="https://www.npmjs.com/package/wave.js" target="_blank" rel="noopener noreferrer" className="hover:text-teal transition-colors">npm</a>
-            <a href="#code" className="hover:text-teal transition-colors">Docs</a>
+            <a href="https://github.com/iOSDevSK/wave.js/blob/main/DOCS.md" target="_blank" rel="noopener noreferrer" className="hover:text-teal transition-colors">Docs</a>
             <a href="#features" className="hover:text-teal transition-colors">Features</a>
           </div>
         </div>

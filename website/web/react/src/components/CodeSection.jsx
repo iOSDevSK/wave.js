@@ -127,7 +127,7 @@ export default function CodeSection() {
   }
 
   return (
-    <section id="code" className="py-32 px-6 relative bg-void overflow-hidden">
+    <section id="code" className="py-32 px-6 relative overflow-hidden">
 
       <div className="max-w-4xl mx-auto text-center mb-16 relative z-10">
         <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">
@@ -175,7 +175,7 @@ export default function CodeSection() {
       </div>
 
       {/* Framework selector buttons */}
-      <div className="max-w-3xl mx-auto mt-12 pt-8 border-t border-white/[0.05] flex flex-wrap justify-center gap-6">
+      <div className="max-w-3xl mx-auto mt-12 flex flex-wrap justify-center gap-6">
         <button
           onClick={() => setTab('vanilla')}
           className={`flex items-center gap-2 font-display font-medium px-5 py-2.5 rounded-lg border transition-all duration-300 ${
