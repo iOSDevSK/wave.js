@@ -607,7 +607,7 @@ export default function Hero({ activePreset, onPresetApplied }) {
         </div>
         )}
         {/* Panel */}
-        <div id="params-desktop" className="hide-scrollbar" style={{ width: '14.5vw', maxHeight: 'calc(100vh - 6rem)', overflowY: 'auto' }}>
+        <div id="params-desktop" className="hide-scrollbar" style={{ width: 'min(19.5vw, 300px)', maxHeight: 'calc(100vh - 6rem)', overflowY: 'auto' }}>
           {renderPanel(false)}
         </div>
       </div>
