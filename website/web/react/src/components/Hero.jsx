@@ -574,10 +574,11 @@ export default function Hero({ activePreset, onPresetApplied }) {
           </div>
         </div>
 
-        {/* Desktop: Parameters Panel — absolute */}
-        <div className="absolute right-6 hidden xl:block" style={{ width: '22%', top: '35vh', transform: 'translateY(-50%)', maxHeight: 'calc(100vh - 6rem)', overflowY: 'auto' }}>
-          {renderPanel(false)}
-        </div>
+      </div>
+
+      {/* Desktop: Parameters Panel — absolute to section (min-h-screen), centered */}
+      <div className="absolute right-[max(1.5rem,calc((100%-80rem)/2+1.5rem))] hidden xl:block z-20" style={{ width: '17%', top: '50%', transform: 'translateY(-50%)', maxHeight: 'calc(100vh - 6rem)', overflowY: 'auto' }}>
+        {renderPanel(false)}
       </div>
 
       {/* Scroll */}
