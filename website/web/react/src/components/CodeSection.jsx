@@ -37,10 +37,6 @@ const codeVanilla = [
     { cls: 'token-number', text: '0.5' },
     { text: ',' },
   ]},
-  { type: 'code', parts: [
-    { text: '  glass: ' },
-    { cls: 'token-keyword', text: 'true' },
-  ]},
   { type: 'code', parts: [{ text: '})' }] },
 ]
 
@@ -73,11 +69,6 @@ const codeReact = [
     { text: '      theme=' },
     { cls: 'token-string', text: '"sunset"' },
   ]},
-  { type: 'code', parts: [
-    { text: '      style={{ height: ' },
-    { cls: 'token-string', text: "'50vh'" },
-    { text: ' }}' },
-  ]},
   { type: 'code', parts: [{ text: '    >' }] },
   { type: 'code', parts: [
     { text: '      <' },
@@ -101,14 +92,13 @@ const wave = new WaveBackground('#hero', {
   theme: 'sunset',
   waveCount: 12,
   speed: 0.5,
-  glass: true
 })`
 
 const rawReact = `import { HeroWave } from '@redesigner/wave.js/react'
 
 function App() {
   return (
-    <HeroWave theme="sunset" style={{ height: '50vh' }}>
+    <HeroWave theme="sunset">
       <h1>Your Content</h1>
     </HeroWave>
   )
