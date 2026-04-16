@@ -14,7 +14,6 @@ export default function WaveLogo({ size = 32, className = '' }) {
           strokeWidth="2.5"
           strokeLinecap="square"
           strokeLinejoin="miter"
-          className="animated-line"
         />
       </svg>
     </div>

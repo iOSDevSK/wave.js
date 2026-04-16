@@ -307,10 +307,10 @@ export default function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
       {/* Content */}
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <div className="relative z-20 w-full max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
 
         {/* Left: Copy */}
-        <div className="lg:col-span-8 flex flex-col items-center lg:items-start text-center lg:text-left">
+        <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue/10 border border-blue/20 text-teal text-xs font-mono mb-8">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal opacity-75" />
@@ -366,11 +366,14 @@ export default function Hero() {
         </div>
 
         {/* Right: Full Parameters Panel */}
-        <div className="lg:col-span-4 relative hidden md:block">
+        <div className="lg:col-span-5 relative hidden md:block">
 
-          <div className="relative rounded-xl overflow-hidden glass-panel shadow-2xl shadow-black/50">
+          <div
+            className="relative rounded-[14px] overflow-hidden w-[64%] ml-auto"
+            style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)' }}
+          >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-white/5">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
               <h3 className="text-sm font-medium flex items-center gap-2 text-white">
                 <Faders size={16} className="text-teal" /> Parameters
               </h3>
@@ -380,7 +383,7 @@ export default function Hero() {
             </div>
 
             {/* Body — no scroll, full height */}
-            <div ref={panelRef} className="p-4 bg-[#050505]/80 space-y-2">
+            <div ref={panelRef} className="p-4 space-y-2">
 
               {/* 12 Sliders */}
               {SLIDER_DEFS.map(s => (
