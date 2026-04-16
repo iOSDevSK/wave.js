@@ -299,6 +299,17 @@ export default function Hero({ activePreset, onPresetApplied }) {
   const [liquidMetal, setLiquidMetal] = useState(DEFAULT_PRESET.liquidMetal)
   const [renderMode, setRenderMode] = useState(DEFAULT_PRESET.renderer)
   const [panelOpen, setPanelOpen] = useState(true)
+  const [panelNeedsScroll, setPanelNeedsScroll] = useState(false)
+
+  useEffect(() => {
+    const check = () => {
+      const el = document.getElementById('params-desktop')
+      if (el) setPanelNeedsScroll(el.scrollHeight > el.clientHeight)
+    }
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [panelOpen])
 
   const colors = currentTheme === 'custom' && customColors
     ? customColors
@@ -578,23 +589,25 @@ export default function Hero({ activePreset, onPresetApplied }) {
 
       {/* Desktop: Parameters Panel — absolute to section (min-h-screen), centered */}
       <div className="absolute right-[max(1.5rem,calc((100%-80rem)/2+1.5rem))] hidden xl:flex z-20 items-center gap-3" style={{ top: '5rem', maxHeight: 'calc(100vh - 6rem)' }}>
-        {/* Scroll arrows */}
+        {/* Scroll arrows — only when panel needs scroll */}
+        {panelNeedsScroll && (
         <div className="flex flex-col gap-2">
           <button
-            onClick={() => { const el = document.getElementById('params-desktop'); if (el) el.scrollBy({ top: -150, behavior: 'smooth' }) }}
+            onClick={() => { const el = document.getElementById('params-desktop'); if (el) el.scrollTo({ top: 0, behavior: 'smooth' }) }}
             className="w-8 h-8 rounded-full border border-white/15 flex items-center justify-center text-white/30 hover:text-white/70 hover:border-white/30 transition-all"
           >
             <CaretUp size={14} />
           </button>
           <button
-            onClick={() => { const el = document.getElementById('params-desktop'); if (el) el.scrollBy({ top: 150, behavior: 'smooth' }) }}
+            onClick={() => { const el = document.getElementById('params-desktop'); if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }) }}
             className="w-8 h-8 rounded-full border border-white/15 flex items-center justify-center text-white/30 hover:text-white/70 hover:border-white/30 transition-all"
           >
             <CaretDown size={14} />
           </button>
         </div>
+        )}
         {/* Panel */}
-        <div id="params-desktop" className="hide-scrollbar" style={{ width: '17vw', maxHeight: 'calc(100vh - 6rem)', overflowY: 'auto' }}>
+        <div id="params-desktop" className="hide-scrollbar" style={{ width: '14.5vw', maxHeight: 'calc(100vh - 6rem)', overflowY: 'auto' }}>
           {renderPanel(false)}
         </div>
       </div>
