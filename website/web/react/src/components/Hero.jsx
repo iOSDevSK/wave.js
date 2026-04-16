@@ -577,8 +577,26 @@ export default function Hero({ activePreset, onPresetApplied }) {
       </div>
 
       {/* Desktop: Parameters Panel — absolute to section (min-h-screen), centered */}
-      <div className="absolute right-[max(1.5rem,calc((100%-80rem)/2+1.5rem))] hidden xl:block z-20 hide-scrollbar" style={{ width: '17%', top: '5rem', maxHeight: 'calc(100vh - 6rem)', overflowY: 'auto' }}>
-        {renderPanel(false)}
+      <div className="absolute right-[max(1.5rem,calc((100%-80rem)/2+1.5rem))] hidden xl:flex z-20 items-center gap-3" style={{ top: '5rem', maxHeight: 'calc(100vh - 6rem)' }}>
+        {/* Scroll arrows */}
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={() => { const el = document.getElementById('params-desktop'); if (el) el.scrollBy({ top: -150, behavior: 'smooth' }) }}
+            className="w-8 h-8 rounded-full border border-white/15 flex items-center justify-center text-white/30 hover:text-white/70 hover:border-white/30 transition-all"
+          >
+            <CaretUp size={14} />
+          </button>
+          <button
+            onClick={() => { const el = document.getElementById('params-desktop'); if (el) el.scrollBy({ top: 150, behavior: 'smooth' }) }}
+            className="w-8 h-8 rounded-full border border-white/15 flex items-center justify-center text-white/30 hover:text-white/70 hover:border-white/30 transition-all"
+          >
+            <CaretDown size={14} />
+          </button>
+        </div>
+        {/* Panel */}
+        <div id="params-desktop" className="hide-scrollbar" style={{ width: '17vw', maxHeight: 'calc(100vh - 6rem)', overflowY: 'auto' }}>
+          {renderPanel(false)}
+        </div>
       </div>
 
       {/* Scroll */}
