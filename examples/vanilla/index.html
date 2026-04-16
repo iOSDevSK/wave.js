@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>wave.js — Vanilla JS Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, sans-serif; }
+    #hero {
+      width: 100%;
+      height: 100vh;
+      position: relative;
+    }
+    .content {
+      position: relative;
+      z-index: 5;
+      color: white;
+      text-align: center;
+      padding-top: 35vh;
+    }
+    .content h1 { font-size: 3rem; font-weight: 700; margin-bottom: 1rem; }
+    .content p { font-size: 1.2rem; opacity: 0.7; }
+    .controls {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 20;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 1rem;
+      color: white;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .controls button {
+      padding: 0.5rem 1rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .controls button:hover { background: rgba(255,255,255,0.2); }
+  </style>
+</head>
+<body>
+  <div id="hero">
+    <div class="content">
+      <h1>Vanilla JS Test</h1>
+      <p>@redesigner/wave.js installed from npm</p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <strong>Theme:</strong>
+    <button onclick="wave.setTheme('sunset')">Sunset</button>
+    <button onclick="wave.setTheme('daytime')">Daytime</button>
+    <button onclick="wave.setTheme('night')">Night</button>
+    <button onclick="wave.setTheme('dusk')">Dusk</button>
+    <strong>Effects:</strong>
+    <button onclick="wave.setGlass(!wave.glass)">Toggle Glass</button>
+    <button onclick="wave.setLiquidMetal(!wave.liquidMetal)">Toggle Liquid Metal</button>
+    <button onclick="wave.setSplitFill(!wave.splitFill)">Toggle Split Fill</button>
+    <strong>Renderer:</strong>
+    <button onclick="wave.setRenderMode('webgl2')">WebGL2</button>
+    <button onclick="wave.setRenderMode('canvas2d')">Canvas 2D</button>
+    <button onclick="wave.setRenderMode('css')">CSS</button>
+  </div>
+
+  <script type="module">
+    import { WaveBackground } from '@redesigner/wave.js'
+
+    const wave = new WaveBackground('#hero', {
+      theme: 'sunset',
+      waveCount: 12,
+      speed: 0.5,
+      amplitude: 0.08,
+    })
+
+    // Expose to window for button controls
+    window.wave = wave
+
+    console.log('wave.js loaded! Renderer:', wave.renderMode)
+  </script>
+</body>
+</html>
