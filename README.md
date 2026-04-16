@@ -208,7 +208,19 @@ You can check which renderer is active via `wave.renderMode`.
 | `sunset` | 20:00–23:00 | Deep purple, pink, coral, orange |
 | `night` | 23:00–05:00 | Near-black, dark purple, medium purple, violet |
 
-When no theme is specified, the component automatically selects based on the user's local time.
+When no theme is specified, the component automatically selects based on the user's local time and re-checks every 60 seconds.
+
+To **disable auto-detection**, simply pass a `theme` option:
+
+```js
+// Fixed theme — no auto-switching
+new WaveBackground('#hero', { theme: 'sunset' })
+
+// React — fixed theme
+<HeroWave theme="sunset">...</HeroWave>
+```
+
+If the user manually selects a theme via the control panel, auto-detection is disabled until reset.
 
 ## Browser Support
 
