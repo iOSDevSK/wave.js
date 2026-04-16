@@ -494,7 +494,7 @@ export default function Hero({ activePreset, onPresetApplied }) {
 
   return (
     <>
-    <section ref={heroRef} className="relative min-h-screen w-full flex items-center justify-center pt-20 overflow-hidden bg-void">
+    <section ref={heroRef} className="relative min-h-screen w-full flex items-center justify-center pt-20 bg-void overflow-x-hidden">
       {/* Grid overlay — always visible above wave canvas */}
       <div className="absolute inset-0 bg-grid-pattern pointer-events-none z-10" />
       {/* Content */}
@@ -577,7 +577,7 @@ export default function Hero({ activePreset, onPresetApplied }) {
       </div>
 
       {/* Desktop: Parameters Panel — absolute to section (min-h-screen), centered */}
-      <div className="absolute right-[max(1.5rem,calc((100%-80rem)/2+1.5rem))] hidden xl:block z-20" style={{ width: '17%', top: '50%', transform: 'translateY(-50%)', maxHeight: 'calc(100vh - 6rem)', overflowY: 'auto' }}>
+      <div className="absolute right-[max(1.5rem,calc((100%-80rem)/2+1.5rem))] hidden xl:block z-20" style={{ width: '17%', top: '5rem' }}>
         {renderPanel(false)}
       </div>
 
