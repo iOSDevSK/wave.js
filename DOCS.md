@@ -24,13 +24,13 @@ GPU-accelerated animated sine wave backgrounds. Vanilla JS + React. Automatic fa
 ## Installation
 
 ```bash
-npm install wave.js
+npm install @redesigner/wave.js
 ```
 
 For React users:
 
 ```bash
-npm install wave.js react react-dom
+npm install @redesigner/wave.js react react-dom
 ```
 
 ---
@@ -40,7 +40,7 @@ npm install wave.js react react-dom
 ### Basic
 
 ```js
-import { WaveBackground } from 'wave.js'
+import { WaveBackground } from '@redesigner/wave.js'
 
 const wave = new WaveBackground('#hero', {
   theme: 'sunset',
@@ -157,7 +157,7 @@ Removes the canvas, stops the animation loop, and removes all event listeners.
     </div>
   </div>
   <script type="module">
-    import { WaveBackground } from 'wave.js'
+    import { WaveBackground } from '@redesigner/wave.js'
     new WaveBackground('#hero', {
       theme: 'sunset',
       waveCount: 12,
@@ -174,7 +174,7 @@ Removes the canvas, stops the animation loop, and removes all event listeners.
 ### Basic
 
 ```jsx
-import { HeroWave } from 'wave.js/react'
+import { HeroWave } from '@redesigner/wave.js/react'
 
 function App() {
   return (
@@ -439,7 +439,7 @@ Smooth 3D chrome effect with:
 ### Vanilla JS — Low-power fallback
 
 ```js
-import { WaveBackground } from 'wave.js'
+import { WaveBackground } from '@redesigner/wave.js'
 
 const wave = new WaveBackground('#hero', {
   renderer: 'canvas2d',
@@ -474,7 +474,7 @@ new WaveBackground('#hero', {
 ### React — Conditional rendering
 
 ```jsx
-import { HeroWave } from 'wave.js/react'
+import { HeroWave } from '@redesigner/wave.js/react'
 
 function App() {
   return (

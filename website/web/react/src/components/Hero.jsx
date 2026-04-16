@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { ArrowRight, Copy, Check, ShieldCheck, Gauge, FileZip, Package, CaretDown, Faders, ArrowCounterClockwise, CaretUp } from '@phosphor-icons/react'
-import { WaveBackground } from 'wave.js'
+import { WaveBackground } from '@redesigner/wave.js'
 import PRESETS from '../presets'
 
 // Default effect on page load — Canvas 2D daytime waves with split fill

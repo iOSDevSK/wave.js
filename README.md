@@ -25,13 +25,13 @@ GPU-accelerated animated sine wave backgrounds. Works with **vanilla JS** and **
 ## Installation
 
 ```bash
-npm install wave.js
+npm install @redesigner/wave.js
 ```
 
 ## Vanilla JS
 
 ```js
-import { WaveBackground } from 'wave.js'
+import { WaveBackground } from '@redesigner/wave.js'
 
 const wave = new WaveBackground('#hero', {
   theme: 'sunset',
@@ -88,7 +88,7 @@ wave.destroy()
 ```html
 <div id="hero" style="width: 100%; height: 100vh;"></div>
 <script type="module">
-  import { WaveBackground } from 'wave.js'
+  import { WaveBackground } from '@redesigner/wave.js'
   new WaveBackground('#hero', { theme: 'daytime' })
 </script>
 ```
@@ -96,11 +96,11 @@ wave.destroy()
 ## React
 
 ```bash
-npm install wave.js react react-dom
+npm install @redesigner/wave.js react react-dom
 ```
 
 ```jsx
-import { HeroWave } from 'wave.js/react'
+import { HeroWave } from '@redesigner/wave.js/react'
 
 function App() {
   return (
