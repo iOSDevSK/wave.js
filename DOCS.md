@@ -491,14 +491,14 @@ function App() {
 ## Architecture
 
 ```
-wave.js (vanilla entry)
+@redesigner/wave.js (vanilla entry)
   └─ WaveBackground class
        ├─ WebGLRenderer (raw WebGL2, GLSL shaders, fullscreen quad)
        ├─ Canvas2DRenderer (CPU sine wave path drawing)
        ├─ CSS fallback (linear-gradient on container)
        └─ None fallback (solid background color)
 
-wave.js/react (React entry)
+@redesigner/wave.js/react (React entry)
   └─ HeroWave component
        ├─ Uses WaveBackground internally via useRef/useEffect
        └─ Control panel UI (sliders, color picker, toggles, renderer select)
