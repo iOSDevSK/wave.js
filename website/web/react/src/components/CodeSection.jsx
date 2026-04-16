@@ -8,7 +8,7 @@ const codeVanilla = [
     { text: ' { WaveBackground } ' },
     { cls: 'token-keyword', text: 'from' },
     { text: ' ' },
-    { cls: 'token-string', text: "'wave.js'" },
+    { cls: 'token-string', text: "'@redesigner/wave.js'" },
   ]},
   { type: 'blank' },
   { type: 'comment', text: '// 2. Initialize on a container' },
@@ -51,7 +51,7 @@ const codeReact = [
     { text: ' { HeroWave } ' },
     { cls: 'token-keyword', text: 'from' },
     { text: ' ' },
-    { cls: 'token-string', text: "'wave.js/react'" },
+    { cls: 'token-string', text: "'@redesigner/wave.js/react'" },
   ]},
   { type: 'blank' },
   { type: 'code', parts: [
@@ -95,7 +95,7 @@ const codeReact = [
   { type: 'code', parts: [{ text: '}' }] },
 ]
 
-const rawVanilla = `import { WaveBackground } from 'wave.js'
+const rawVanilla = `import { WaveBackground } from '@redesigner/wave.js'
 
 const wave = new WaveBackground('#hero', {
   theme: 'sunset',
@@ -104,7 +104,7 @@ const wave = new WaveBackground('#hero', {
   glass: true
 })`
 
-const rawReact = `import { HeroWave } from 'wave.js/react'
+const rawReact = `import { HeroWave } from '@redesigner/wave.js/react'
 
 function App() {
   return (

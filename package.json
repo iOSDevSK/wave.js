@@ -1,9 +1,19 @@
 {
-  "name": "wave.js",
+  "name": "@redesigner/wave.js",
   "version": "1.0.0",
   "type": "module",
   "description": "GPU-accelerated animated sine wave backgrounds. Vanilla JS + React. WebGL2 → Canvas 2D → CSS fallback. 60 FPS.",
-  "keywords": ["waves", "animation", "background", "webgl", "canvas", "shader", "gpu", "react", "vanilla"],
+  "keywords": [
+    "waves",
+    "animation",
+    "background",
+    "webgl",
+    "canvas",
+    "shader",
+    "gpu",
+    "react",
+    "vanilla"
+  ],
   "author": "Filip Dvoran",
   "license": "MIT",
   "repository": {
@@ -47,8 +57,12 @@
     "react-dom": ">=17.0.0"
   },
   "peerDependenciesMeta": {
-    "react": { "optional": true },
-    "react-dom": { "optional": true }
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

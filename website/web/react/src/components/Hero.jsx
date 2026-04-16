@@ -498,7 +498,7 @@ export default function Hero({ activePreset, onPresetApplied }) {
   }, [])
 
   const handleCopy = () => {
-    navigator.clipboard.writeText('npm install wave.js')
+    navigator.clipboard.writeText('npm install @redesigner/wave.js')
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -554,7 +554,7 @@ export default function Hero({ activePreset, onPresetApplied }) {
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-teal to-blue rounded blur opacity-20 group-hover:opacity-50 transition duration-500" />
                 <div className="relative flex items-center bg-wave-panel border border-white/10 rounded px-4 py-3 cursor-text">
                   <span className="text-muted mr-3 font-mono text-sm">$</span>
-                  <code className="font-mono text-sm text-zinc-300">npm install wave.js</code>
+                  <code className="font-mono text-sm text-zinc-300">npm install @redesigner/wave.js</code>
                   <button onClick={handleCopy} className="ml-6 text-zinc-500 hover:text-white transition-colors" title="Copy to clipboard">
                     {copied ? <Check size={18} className="text-teal" /> : <Copy size={18} />}
                   </button>
