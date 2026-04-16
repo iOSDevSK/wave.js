@@ -1,14 +1,16 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { ArrowRight, Copy, Check, ShieldCheck, Gauge, FileZip, Package, CaretDown, Faders, ArrowCounterClockwise } from '@phosphor-icons/react'
+import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
+import { ArrowRight, Copy, Check, ShieldCheck, Gauge, FileZip, Package, CaretDown, Faders, ArrowCounterClockwise, CaretUp } from '@phosphor-icons/react'
+import { WaveBackground } from 'wave.js'
 
 // --- Color helpers (from wave.js themes.js) ---
 const COLOR_THEMES = {
-  'pre-dawn': ['#1a0033', '#d91aff', '#ff6b35', '#ffb347'],
-  'sunrise':  ['#2d0a4e', '#ff29b0', '#ff8c42', '#ffd166'],
-  'daytime':  ['#0a1628', '#4361ee', '#48bfe3', '#72efdd'],
-  'dusk':     ['#1a0533', '#7b2ff7', '#c77dff', '#e0aaff'],
-  'sunset':   ['#1a0033', '#f394ff', '#ff6b6b', '#fca311'],
-  'night':    ['#0d0221', '#3d1a78', '#6b3fa0', '#9d4edd'],
+  'pre-dawn': ['#000000', '#d91aff', '#ff6b35', '#ffb347'],
+  'sunrise':  ['#000000', '#ff29b0', '#ff8c42', '#ffd166'],
+  'daytime':  ['#000000', '#4361ee', '#48bfe3', '#72efdd'],
+  'dusk':     ['#000000', '#7b2ff7', '#c77dff', '#e0aaff'],
+  'sunset':   ['#000000', '#f394ff', '#ff6b6b', '#fca311'],
+  'night':    ['#000000', '#3d1a78', '#6b3fa0', '#9d4edd'],
 }
 
 const DEFAULTS = {
@@ -89,6 +91,7 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange, panelRef 
   const [open, setOpen] = useState(false)
   const [hsv, setHsv] = useState(() => hexToHsv(color))
   const ref = useRef()
+  const popupRef = useRef()
   const areaRef = useRef()
   const areaDragging = useRef(false)
 
@@ -102,7 +105,9 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange, panelRef 
   useEffect(() => {
     if (!open) return
     const handleClick = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+      const inSwatch = ref.current && ref.current.contains(e.target)
+      const inPopup = popupRef.current && popupRef.current.contains(e.target)
+      if (!inSwatch && !inPopup) setOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -158,8 +163,8 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange, panelRef 
           border: open ? '2px solid white' : '2px solid rgba(255,255,255,0.2)',
         }}
       />
-      {open && (
-        <div className="fixed z-[100] flex flex-col gap-2 p-2 rounded-xl border border-white/15" style={{ ...fixedPos, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)', width: 176 }}>
+      {open && createPortal(
+        <div ref={popupRef} className="fixed z-[200] flex flex-col gap-2 p-2 rounded-xl border border-white/15" style={{ ...fixedPos, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)', width: 176, pointerEvents: 'auto' }}>
           {/* SV area */}
           <div ref={areaRef} onPointerDown={onAreaPointerDown} onPointerMove={onAreaPointerMove} onPointerUp={onAreaPointerUp}
             className="relative w-full rounded-md overflow-hidden cursor-crosshair" style={{ aspectRatio: '4/3', background: hueColor, touchAction: 'none' }}>
@@ -201,7 +206,8 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange, panelRef 
               <div className="text-[9px] text-white/40 mt-0.5">A</div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
@@ -262,6 +268,8 @@ function Toggle({ label, value, onToggle }) {
 export default function Hero() {
   const [copied, setCopied] = useState(false)
   const panelRef = useRef()
+  const heroRef = useRef()
+  const waveRef = useRef(null)
 
   // --- Full params state (mirrors HeroWave.jsx) ---
   const [params, setParams] = useState({ ...DEFAULTS })
@@ -273,6 +281,9 @@ export default function Hero() {
   const [glass, setGlass] = useState(false)
   const [liquidMetal, setLiquidMetal] = useState(false)
   const [renderMode, setRenderMode] = useState('webgl2')
+  const [panelOpen, setPanelOpen] = useState(true)
+  const panelWrapRef = useRef()
+  const [panelTopPx, setPanelTopPx] = useState(null)
 
   const colors = currentTheme === 'custom' && customColors
     ? customColors
@@ -290,6 +301,82 @@ export default function Hero() {
     setCurrentTheme(getTimeOfDay())
   }
 
+  // Mount WaveBackground
+  useEffect(() => {
+    if (!heroRef.current) return
+    const initialTheme = getTimeOfDay()
+    const wave = new WaveBackground(heroRef.current, {
+      theme: initialTheme,
+    })
+    waveRef.current = wave
+    setRenderMode(wave.renderMode)
+    // Immediately override colors to black bg (skip 1500ms animation)
+    const ourColors = COLOR_THEMES[initialTheme]
+    const rgbColors = ourColors.map(hex => [
+      parseInt(hex.slice(1, 3), 16) / 255,
+      parseInt(hex.slice(3, 5), 16) / 255,
+      parseInt(hex.slice(5, 7), 16) / 255,
+    ])
+    wave.colors = rgbColors.map(c => [...c])
+    wave.targetColors = rgbColors.map(c => [...c])
+    wave._colorTransition = null
+    // Make canvas non-blocking for pointer events and full-width
+    const canvas = heroRef.current.querySelector('canvas')
+    if (canvas) {
+      canvas.style.pointerEvents = 'none'
+      canvas.style.position = 'absolute'
+      canvas.style.inset = '0'
+      canvas.style.width = '100%'
+      canvas.style.height = '100%'
+      canvas.style.zIndex = '0'
+    }
+    return () => wave.destroy()
+  }, [])
+
+  // Sync params to wave instance
+  useEffect(() => {
+    const w = waveRef.current
+    if (!w) return
+    Object.keys(params).forEach(k => w.setParam(k, params[k]))
+    w.setSplitFill(splitFill)
+    w.setGlass(glass)
+    w.setLiquidMetal(liquidMetal)
+    w.setColorOpacities(colorOpacities)
+  }, [params, splitFill, glass, liquidMetal, colorOpacities])
+
+  // Sync theme/colors — always use our COLOR_THEMES (with #000000 bg)
+  useEffect(() => {
+    const w = waveRef.current
+    if (!w) return
+    if (currentTheme === 'custom' && customColors) {
+      w.setColors(customColors)
+    } else if (COLOR_THEMES[currentTheme]) {
+      w.setColors(COLOR_THEMES[currentTheme])
+    }
+  }, [currentTheme, customColors])
+
+  // Sync renderer
+  const handleRenderModeChange = (mode) => {
+    const w = waveRef.current
+    if (!w) return
+    w.setRenderMode(mode)
+    setRenderMode(w.renderMode)
+  }
+
+  // Lock panel Y position after first render (centered), so collapse doesn't shift it
+  useEffect(() => {
+    if (panelTopPx != null || !panelWrapRef.current) return
+    requestAnimationFrame(() => {
+      const el = panelWrapRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const parentRect = el.offsetParent?.getBoundingClientRect()
+      if (parentRect) {
+        setPanelTopPx(rect.top - parentRect.top)
+      }
+    })
+  }, [panelTopPx])
+
   // Auto time-of-day
   useEffect(() => {
     const interval = setInterval(() => {
@@ -305,12 +392,14 @@ export default function Hero() {
   }
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+    <section ref={heroRef} className="relative min-h-screen w-full flex items-center justify-center pt-20 overflow-hidden bg-black">
+      {/* Grid overlay — always visible above wave canvas */}
+      <div className="absolute inset-0 bg-grid-pattern pointer-events-none z-10" />
       {/* Content */}
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      <div className="relative z-20 w-full max-w-7xl mx-auto px-6">
 
         {/* Left: Copy */}
-        <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left">
+        <div className="max-w-3xl flex flex-col items-center lg:items-start text-center lg:text-left">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue/10 border border-blue/20 text-teal text-xs font-mono mb-8">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal opacity-75" />
@@ -365,25 +454,34 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Right: Full Parameters Panel */}
-        <div className="lg:col-span-5 relative hidden md:block">
+        {/* Right: Full Parameters Panel — absolute so collapse doesn't shift layout */}
+        <div ref={panelWrapRef} className="absolute right-6 hidden md:block" style={{ width: '22%', top: panelTopPx != null ? panelTopPx : '50%', transform: panelTopPx != null ? 'none' : 'translateY(-50%)' }}>
 
           <div
-            className="relative rounded-[14px] overflow-hidden w-[64%] ml-auto"
+            className="relative rounded-[14px] w-full"
             style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)' }}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+            {/* Header — always visible */}
+            <div className={`flex items-center justify-between px-4 py-2.5 ${panelOpen ? 'border-b border-white/10' : ''}`}>
               <h3 className="text-sm font-medium flex items-center gap-2 text-white">
                 <Faders size={16} className="text-teal" /> Parameters
               </h3>
-              <button onClick={resetDefaults} className="text-[10px] font-mono text-zinc-500 hover:text-teal transition-colors flex items-center gap-1" title="Reset to defaults">
-                <ArrowCounterClockwise size={12} /> Reset
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={resetDefaults} className="text-[10px] font-mono text-zinc-500 hover:text-teal transition-colors flex items-center gap-1" title="Reset to defaults">
+                  <ArrowCounterClockwise size={12} /> Reset
+                </button>
+                <button onClick={() => setPanelOpen(o => !o)} className="text-zinc-500 hover:text-white transition-colors" title={panelOpen ? 'Collapse' : 'Expand'}>
+                  <CaretUp size={16} className={`transition-transform duration-300 ${panelOpen ? '' : 'rotate-180'}`} />
+                </button>
+              </div>
             </div>
 
-            {/* Body — no scroll, full height */}
-            <div ref={panelRef} className="p-4 space-y-2">
+            {/* Body — animated slide */}
+            <div
+              className="transition-all duration-400 ease-in-out overflow-hidden"
+              style={{ maxHeight: panelOpen ? 1200 : 0, opacity: panelOpen ? 1 : 0 }}
+            >
+              <div ref={panelRef} className="p-4 space-y-2">
 
               {/* 12 Sliders */}
               {SLIDER_DEFS.map(s => (
@@ -451,7 +549,7 @@ export default function Hero() {
                 <div className="text-[10px] uppercase tracking-wider text-muted font-mono mb-1.5">Renderer</div>
                 <select
                   value={renderMode}
-                  onChange={e => setRenderMode(e.target.value)}
+                  onChange={e => handleRenderModeChange(e.target.value)}
                   className="w-full py-1.5 px-2 bg-white/[0.08] border border-white/[0.12] rounded-md text-white text-xs cursor-pointer font-mono outline-none appearance-none"
                 >
                   <option value="webgl2" style={{ background: '#111' }}>WebGL2 (GPU)</option>
@@ -460,6 +558,7 @@ export default function Hero() {
                   <option value="none" style={{ background: '#111' }}>None (Solid Color)</option>
                 </select>
               </div>
+            </div>
             </div>
           </div>
         </div>
