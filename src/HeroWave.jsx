@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import WaveBackground from './WaveBackground.js'
 import { COLOR_THEMES, DEFAULTS, SLIDER_DEFS, getTimeOfDay, hexToHsv, hsvToHex } from './themes.js'
 
@@ -24,6 +25,7 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange, isMobile,
   const [open, setOpen] = useState(false)
   const [hsv, setHsv] = useState(() => hexToHsv(color))
   const ref = useRef()
+  const popupRef = useRef()
   const areaRef = useRef()
   const areaDragging = useRef(false)
 
@@ -37,7 +39,9 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange, isMobile,
   useEffect(() => {
     if (!open) return
     const handleClick = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+      const inSwatch = ref.current && ref.current.contains(e.target)
+      const inPopup = popupRef.current && popupRef.current.contains(e.target)
+      if (!inSwatch && !inPopup) setOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -88,8 +92,8 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange, isMobile,
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <div onClick={() => setOpen(o => !o)} style={{ width: 30, height: 30, borderRadius: 6, background: color, opacity, border: open ? '2px solid white' : '2px solid rgba(255,255,255,0.2)', cursor: 'pointer', transition: 'border-color 0.2s' }} />
-      {open && (
-        <div style={{ position: 'fixed', ...(isMobile ? { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' } : fixedPos), background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: 8, zIndex: 100, display: 'flex', flexDirection: 'column', gap: 8, width: isMobile ? 'min(80vw, 260px)' : pickerSize + 16 }}>
+      {open && createPortal(
+        <div ref={popupRef} style={{ position: 'fixed', ...(isMobile ? { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' } : fixedPos), background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: 8, zIndex: 200, display: 'flex', flexDirection: 'column', gap: 8, width: isMobile ? 'min(80vw, 260px)' : pickerSize + 16, pointerEvents: 'auto' }}>
           <div ref={areaRef} onPointerDown={onAreaPointerDown} onPointerMove={onAreaPointerMove} onPointerUp={onAreaPointerUp} style={{ position: 'relative', width: '100%', aspectRatio: '4/3', borderRadius: 6, background: hueColor, cursor: 'crosshair', touchAction: 'none', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #fff, transparent)' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #000, transparent)' }} />
@@ -123,7 +127,8 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange, isMobile,
               <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>A</div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
