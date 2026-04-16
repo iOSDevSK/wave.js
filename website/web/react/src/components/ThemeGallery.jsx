@@ -1,60 +1,22 @@
 import { ArrowLeft, ArrowRight } from '@phosphor-icons/react'
 import { useState, useRef, useEffect } from 'react'
-
-// Real themes from wave.js themes.js with exact time-of-day ranges
-const presets = [
-  {
-    name: 'Pre-Dawn',
-    time: '05:00 – 08:00',
-    desc: 'Deep purple, magenta, orange, gold',
-    gradient: 'from-[#1a0033] via-[#d91aff] to-[#ffb347]',
-  },
-  {
-    name: 'Sunrise',
-    time: '08:00 – 11:00',
-    desc: 'Dark purple, hot pink, orange, yellow',
-    gradient: 'from-[#2d0a4e] via-[#ff29b0] to-[#ffd166]',
-  },
-  {
-    name: 'Daytime',
-    time: '11:00 – 16:00',
-    desc: 'Navy, blue, cyan, mint',
-    gradient: 'from-[#0a1628] via-[#4361ee] to-[#72efdd]',
-  },
-  {
-    name: 'Dusk',
-    time: '16:00 – 20:00',
-    desc: 'Deep purple, violet, lavender',
-    gradient: 'from-[#1a0533] via-[#7b2ff7] to-[#e0aaff]',
-  },
-  {
-    name: 'Sunset',
-    time: '20:00 – 23:00',
-    desc: 'Purple, pink, coral, orange',
-    gradient: 'from-[#1a0033] via-[#f394ff] to-[#fca311]',
-  },
-  {
-    name: 'Night',
-    time: '23:00 – 05:00',
-    desc: 'Near-black, dark purple, violet',
-    gradient: 'from-[#0d0221] via-[#3d1a78] to-[#9d4edd]',
-  },
-]
+import PRESETS from '../presets'
 
 const GAP = 24
 
-export default function ThemeGallery() {
+export default function ThemeGallery({ onApplyPreset }) {
   const [offset, setOffset] = useState(0)
+  const [activeIdx, setActiveIdx] = useState(null)
   const canLeft = offset > 0
-  const canRight = offset + 3 < presets.length
+  const canRight = offset + 3 < PRESETS.length
   const thumbsRef = useRef(null)
   const [thumbH, setThumbH] = useState(0)
 
   useEffect(() => {
     const measure = () => {
       if (thumbsRef.current) {
-        const firstThumb = thumbsRef.current.querySelector('[data-thumb]')
-        if (firstThumb) setThumbH(firstThumb.offsetHeight)
+        const first = thumbsRef.current.querySelector('[data-thumb]')
+        if (first) setThumbH(first.offsetHeight)
       }
     }
     measure()
@@ -64,53 +26,66 @@ export default function ThemeGallery() {
 
   const trackTransform = `translateX(calc(-${offset} * (100% + ${GAP}px) / 3))`
 
+  const handleClick = (idx) => {
+    setActiveIdx(idx)
+    onApplyPreset?.(PRESETS[idx])
+  }
+
   return (
     <section id="themes" className="py-24 border-y border-white/[0.02] relative">
       <div className="max-w-7xl mx-auto px-6">
         <div className="mb-12">
           <h2 className="font-display text-3xl font-bold mb-2">Sample Themes</h2>
-          <p className="text-muted">Auto time-of-day detection or pick your own.</p>
+          <p className="text-muted">Click a theme to apply it live.</p>
         </div>
 
-        {/* Thumbnails + arrows */}
         <div className="relative">
-          {/* Left arrow — outside content, centered to thumbnails */}
+          {/* Left arrow */}
           <button
             onClick={() => canLeft && setOffset(o => o - 1)}
             className={`absolute z-10 w-12 h-12 rounded-full border-2 border-white/20 flex items-center justify-center transition-all -left-16 ${
               canLeft ? 'hover:bg-white/10 hover:border-white/40 text-white/80 hover:text-white cursor-pointer' : 'text-white/15 border-white/10 cursor-default'
             }`}
-            style={{ top: thumbH ? thumbH / 2 - 24 : '25%' }}
+            style={{ top: thumbH ? thumbH / 2 - 24 : 0 }}
           >
             <ArrowLeft size={18} weight="bold" />
           </button>
 
-          {/* Right arrow — outside content, centered to thumbnails */}
+          {/* Right arrow */}
           <button
             onClick={() => canRight && setOffset(o => o + 1)}
             className={`absolute z-10 w-12 h-12 rounded-full border-2 border-white/20 flex items-center justify-center transition-all -right-16 ${
               canRight ? 'hover:bg-white/10 hover:border-white/40 text-white/80 hover:text-white cursor-pointer' : 'text-white/15 border-white/10 cursor-default'
             }`}
-            style={{ top: thumbH ? thumbH / 2 - 24 : '25%' }}
+            style={{ top: thumbH ? thumbH / 2 - 24 : 0 }}
           >
             <ArrowRight size={18} weight="bold" />
           </button>
 
-          {/* Sliding thumbnails */}
+          {/* Thumbnails */}
           <div className="overflow-hidden" ref={thumbsRef}>
             <div
               className="flex transition-transform duration-500 ease-out"
               style={{ gap: GAP, transform: trackTransform }}
             >
-              {presets.map((p) => (
+              {PRESETS.map((p, i) => (
                 <div
                   key={p.name}
                   data-thumb
-                  className="shrink-0 aspect-video rounded-xl overflow-hidden border-gradient relative"
+                  onClick={() => handleClick(i)}
+                  className={`shrink-0 aspect-video rounded-xl overflow-hidden relative cursor-pointer transition-all duration-300 ${
+                    activeIdx === i ? 'ring-2 ring-teal shadow-[0_0_20px_rgba(0,240,255,0.3)]' : 'hover:ring-1 hover:ring-white/30'
+                  }`}
                   style={{ width: `calc((100% - ${GAP * 2}px) / 3)` }}
                 >
-                  <div className={`w-full h-full bg-gradient-to-br ${p.gradient} hover:scale-110 transition-transform duration-700`} />
+                  <div
+                    className="w-full h-full transition-transform duration-700 hover:scale-110"
+                    style={{ background: `linear-gradient(135deg, ${p.colors[0]}, ${p.colors[1]}, ${p.colors[2]}, ${p.colors[3]})` }}
+                  />
                   <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] pointer-events-none" />
+                  {activeIdx === i && (
+                    <div className="absolute top-2 right-2 bg-teal text-black text-[9px] font-mono font-bold px-1.5 py-0.5 rounded">ACTIVE</div>
+                  )}
                 </div>
               ))}
             </div>
@@ -122,16 +97,25 @@ export default function ThemeGallery() {
               className="flex transition-transform duration-500 ease-out mt-4"
               style={{ gap: GAP, transform: trackTransform }}
             >
-              {presets.map((p) => (
+              {PRESETS.map((p, i) => (
                 <div
                   key={p.name}
-                  className="shrink-0"
+                  className="shrink-0 cursor-pointer"
                   style={{ width: `calc((100% - ${GAP * 2}px) / 3)` }}
+                  onClick={() => handleClick(i)}
                 >
-                  <h4 className="font-medium text-white">
-                    {p.name} <span className="text-xs text-muted font-mono ml-1">{p.time}</span>
+                  <h4 className={`font-medium transition-colors ${activeIdx === i ? 'text-teal' : 'text-white hover:text-teal'}`}>
+                    {p.name}
+                    <span className="text-xs text-muted font-mono ml-2">{p.desc}</span>
                   </h4>
-                  <p className="text-sm font-mono text-muted">{p.desc}</p>
+                  <div className="flex gap-1.5 mt-1.5">
+                    {p.colors.map((c, ci) => (
+                      <div key={ci} className="w-4 h-4 rounded-sm border border-white/20" style={{ background: c }} />
+                    ))}
+                    <span className="text-[10px] text-muted font-mono ml-1 self-center">
+                      {p.renderer === 'webgl2' ? 'WebGL2' : p.renderer}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>

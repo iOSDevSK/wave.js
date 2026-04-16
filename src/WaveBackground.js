@@ -63,16 +63,15 @@ export default class WaveBackground {
     if (mode === this._renderMode) return
     // Cleanup old renderer
     if (this.renderer) this.renderer.destroy()
-    // Remove old canvas if switching to/from CSS
-    if (this.canvas && this.canvas.parentNode && mode === 'css') {
+    // Remove old canvas when switching to non-canvas modes
+    if (this.canvas && this.canvas.parentNode && (mode === 'css' || mode === 'none')) {
       this.canvas.parentNode.removeChild(this.canvas)
       this.canvas = null
     }
-    // Recreate canvas if needed
-    if (!this.canvas && mode !== 'css') {
-      this._createCanvas()
-    }
     if (mode === 'webgl2') {
+      // Need a fresh canvas — can't get webgl2 context on a canvas that already has a 2d context
+      if (this.canvas && this.canvas.parentNode) this.canvas.parentNode.removeChild(this.canvas)
+      this._createCanvas()
       const gl = this.canvas.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' })
       if (gl) {
         this.renderer = new WebGLRenderer(this.canvas, gl)

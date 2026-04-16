@@ -2,15 +2,32 @@ import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { ArrowRight, Copy, Check, ShieldCheck, Gauge, FileZip, Package, CaretDown, Faders, ArrowCounterClockwise, CaretUp } from '@phosphor-icons/react'
 import { WaveBackground } from 'wave.js'
+import PRESETS from '../presets'
+
+// Default effect on page load — Canvas 2D daytime waves with split fill
+const DEFAULT_PRESET = {
+  name: 'Default',
+  colors: ['#07070f', '#3730a3', '#06b6d4', '#34d399'],
+  params: {
+    waveCount: 24, speed: 0.12, amplitude: 0.045, frequency: 5.10,
+    opacity: 0.02, thickness: 1, blur: 0, concentration: 50.00,
+    randomness: 0.07, thicknessRandom: 0.00, verticalOffset: 0.42, rotation: 360,
+    lmLiquid: 0.07,
+  },
+  splitFill: true,
+  glass: false,
+  liquidMetal: false,
+  renderer: 'canvas2d',
+}
 
 // --- Color helpers (from wave.js themes.js) ---
 const COLOR_THEMES = {
-  'pre-dawn': ['#000000', '#d91aff', '#ff6b35', '#ffb347'],
-  'sunrise':  ['#000000', '#ff29b0', '#ff8c42', '#ffd166'],
-  'daytime':  ['#000000', '#4361ee', '#48bfe3', '#72efdd'],
-  'dusk':     ['#000000', '#7b2ff7', '#c77dff', '#e0aaff'],
-  'sunset':   ['#000000', '#f394ff', '#ff6b6b', '#fca311'],
-  'night':    ['#000000', '#3d1a78', '#6b3fa0', '#9d4edd'],
+  'pre-dawn': ['#07070f', '#d91aff', '#ff6b35', '#ffb347'],
+  'sunrise':  ['#07070f', '#ff29b0', '#ff8c42', '#ffd166'],
+  'daytime':  ['#07070f', '#4361ee', '#48bfe3', '#72efdd'],
+  'dusk':     ['#07070f', '#7b2ff7', '#c77dff', '#e0aaff'],
+  'sunset':   ['#07070f', '#f394ff', '#ff6b6b', '#fca311'],
+  'night':    ['#07070f', '#3d1a78', '#6b3fa0', '#9d4edd'],
 }
 
 const DEFAULTS = {
@@ -265,22 +282,22 @@ function Toggle({ label, value, onToggle }) {
 }
 
 // =============================================================
-export default function Hero() {
+export default function Hero({ activePreset, onPresetApplied }) {
   const [copied, setCopied] = useState(false)
   const panelRef = useRef()
   const heroRef = useRef()
   const waveRef = useRef(null)
 
-  // --- Full params state (mirrors HeroWave.jsx) ---
-  const [params, setParams] = useState({ ...DEFAULTS })
-  const [currentTheme, setCurrentTheme] = useState(getTimeOfDay)
-  const userPickedTheme = useRef(false)
-  const [customColors, setCustomColors] = useState(null)
+  // --- Full params state — initialized from DEFAULT_PRESET (Purple Beam) ---
+  const [params, setParams] = useState({ ...DEFAULTS, ...DEFAULT_PRESET.params })
+  const [currentTheme, setCurrentTheme] = useState('custom')
+  const userPickedTheme = useRef(true)
+  const [customColors, setCustomColors] = useState(DEFAULT_PRESET.colors)
   const [colorOpacities, setColorOpacities] = useState([1, 1, 1, 1])
-  const [splitFill, setSplitFill] = useState(false)
-  const [glass, setGlass] = useState(false)
-  const [liquidMetal, setLiquidMetal] = useState(false)
-  const [renderMode, setRenderMode] = useState('webgl2')
+  const [splitFill, setSplitFill] = useState(DEFAULT_PRESET.splitFill)
+  const [glass, setGlass] = useState(DEFAULT_PRESET.glass)
+  const [liquidMetal, setLiquidMetal] = useState(DEFAULT_PRESET.liquidMetal)
+  const [renderMode, setRenderMode] = useState(DEFAULT_PRESET.renderer)
   const [panelOpen, setPanelOpen] = useState(true)
   const panelWrapRef = useRef()
   const [panelTopPx, setPanelTopPx] = useState(null)
@@ -292,27 +309,57 @@ export default function Hero() {
   const setParam = (key, value) => setParams(p => ({ ...p, [key]: value }))
 
   const resetDefaults = () => {
-    setParams({ ...DEFAULTS })
+    const w = waveRef.current
+    const p = DEFAULT_PRESET
+
+    // Apply default preset to wave instance
+    if (w) {
+      if (p.renderer) {
+        w.setRenderMode(p.renderer)
+        setRenderMode(w.renderMode)
+        fixCanvas()
+      }
+      const allParams = { ...DEFAULTS, ...p.params }
+      Object.keys(allParams).forEach(k => w.setParam(k, allParams[k]))
+      w.setSplitFill(p.splitFill)
+      w.setGlass(p.glass)
+      w.setLiquidMetal(p.liquidMetal)
+      w.setColorOpacities([1, 1, 1, 1])
+      const rgbColors = p.colors.map(hex => [
+        parseInt(hex.slice(1, 3), 16) / 255,
+        parseInt(hex.slice(3, 5), 16) / 255,
+        parseInt(hex.slice(5, 7), 16) / 255,
+      ])
+      w.colors = rgbColors.map(c => [...c])
+      w.targetColors = rgbColors.map(c => [...c])
+      w._colorTransition = null
+    }
+
+    // Update React state
+    setParams({ ...DEFAULTS, ...p.params })
     setColorOpacities([1, 1, 1, 1])
-    setSplitFill(false)
-    setGlass(false)
-    setLiquidMetal(false)
-    userPickedTheme.current = false
-    setCurrentTheme(getTimeOfDay())
+    setSplitFill(p.splitFill)
+    setGlass(p.glass)
+    setLiquidMetal(p.liquidMetal)
+    setCustomColors(p.colors)
+    userPickedTheme.current = true
+    setCurrentTheme('custom')
   }
 
-  // Mount WaveBackground
+  // Mount WaveBackground with default preset
   useEffect(() => {
     if (!heroRef.current) return
-    const initialTheme = getTimeOfDay()
+    const p = DEFAULT_PRESET
     const wave = new WaveBackground(heroRef.current, {
-      theme: initialTheme,
+      ...p.params,
+      splitFill: p.splitFill,
+      glass: p.glass,
+      liquidMetal: p.liquidMetal,
     })
     waveRef.current = wave
     setRenderMode(wave.renderMode)
-    // Immediately override colors to black bg (skip 1500ms animation)
-    const ourColors = COLOR_THEMES[initialTheme]
-    const rgbColors = ourColors.map(hex => [
+    // Immediately set preset colors (skip 1500ms animation)
+    const rgbColors = p.colors.map(hex => [
       parseInt(hex.slice(1, 3), 16) / 255,
       parseInt(hex.slice(3, 5), 16) / 255,
       parseInt(hex.slice(5, 7), 16) / 255,
@@ -320,16 +367,26 @@ export default function Hero() {
     wave.colors = rgbColors.map(c => [...c])
     wave.targetColors = rgbColors.map(c => [...c])
     wave._colorTransition = null
-    // Make canvas non-blocking for pointer events and full-width
-    const canvas = heroRef.current.querySelector('canvas')
-    if (canvas) {
-      canvas.style.pointerEvents = 'none'
-      canvas.style.position = 'absolute'
-      canvas.style.inset = '0'
-      canvas.style.width = '100%'
-      canvas.style.height = '100%'
-      canvas.style.zIndex = '0'
+    // Set renderer from preset
+    if (p.renderer) {
+      wave.setRenderMode(p.renderer)
+      setRenderMode(wave.renderMode)
     }
+    // Make canvas non-blocking for pointer events and full-width
+    const setupCanvas = () => {
+      const canvas = heroRef.current.querySelector('canvas')
+      if (canvas) {
+        canvas.style.pointerEvents = 'none'
+        canvas.style.position = 'absolute'
+        canvas.style.inset = '0'
+        canvas.style.width = '100%'
+        canvas.style.height = '100%'
+        canvas.style.zIndex = '0'
+      }
+    }
+    setupCanvas()
+    // Re-check after renderer switch (new canvas may be created)
+    requestAnimationFrame(setupCanvas)
     return () => wave.destroy()
   }, [])
 
@@ -355,13 +412,73 @@ export default function Hero() {
     }
   }, [currentTheme, customColors])
 
+  // Fix canvas styling after renderer switch
+  const fixCanvas = () => {
+    requestAnimationFrame(() => {
+      const canvas = heroRef.current?.querySelector('canvas')
+      if (canvas) {
+        canvas.style.pointerEvents = 'none'
+        canvas.style.position = 'absolute'
+        canvas.style.inset = '0'
+        canvas.style.width = '100%'
+        canvas.style.height = '100%'
+        canvas.style.zIndex = '0'
+      }
+    })
+  }
+
   // Sync renderer
   const handleRenderModeChange = (mode) => {
     const w = waveRef.current
     if (!w) return
     w.setRenderMode(mode)
     setRenderMode(w.renderMode)
+    fixCanvas()
   }
+
+  // Apply preset from ThemeGallery
+  useEffect(() => {
+    if (!activePreset) return
+    const w = waveRef.current
+    if (!w) return
+
+    // 1. Switch renderer first (may create new canvas)
+    if (activePreset.renderer) {
+      w.setRenderMode(activePreset.renderer)
+      setRenderMode(w.renderMode)
+      fixCanvas()
+    }
+
+    // 2. Apply all params directly on wave instance
+    const allParams = { ...DEFAULTS, ...activePreset.params }
+    Object.keys(allParams).forEach(k => w.setParam(k, allParams[k]))
+    w.setSplitFill(activePreset.splitFill)
+    w.setGlass(activePreset.glass)
+    w.setLiquidMetal(activePreset.liquidMetal)
+    w.setColorOpacities([1, 1, 1, 1])
+
+    // 3. Set colors immediately (no animation)
+    const rgbColors = activePreset.colors.map(hex => [
+      parseInt(hex.slice(1, 3), 16) / 255,
+      parseInt(hex.slice(3, 5), 16) / 255,
+      parseInt(hex.slice(5, 7), 16) / 255,
+    ])
+    w.colors = rgbColors.map(c => [...c])
+    w.targetColors = rgbColors.map(c => [...c])
+    w._colorTransition = null
+
+    // 4. Update React state to match (for panel display)
+    setParams(allParams)
+    setSplitFill(activePreset.splitFill)
+    setGlass(activePreset.glass)
+    setLiquidMetal(activePreset.liquidMetal)
+    setColorOpacities([1, 1, 1, 1])
+    setCustomColors(activePreset.colors)
+    userPickedTheme.current = true
+    setCurrentTheme('custom')
+
+    onPresetApplied?.()
+  }, [activePreset])
 
   // Lock panel Y position after first render (centered), so collapse doesn't shift it
   useEffect(() => {
@@ -392,7 +509,7 @@ export default function Hero() {
   }
 
   return (
-    <section ref={heroRef} className="relative min-h-screen w-full flex items-center justify-center pt-20 overflow-hidden bg-black">
+    <section ref={heroRef} className="relative min-h-screen w-full flex items-center justify-center pt-20 overflow-hidden bg-void">
       {/* Grid overlay — always visible above wave canvas */}
       <div className="absolute inset-0 bg-grid-pattern pointer-events-none z-10" />
       {/* Content */}
@@ -400,12 +517,22 @@ export default function Hero() {
 
         {/* Left: Copy */}
         <div className="max-w-3xl flex flex-col items-center lg:items-start text-center lg:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue/10 border border-blue/20 text-teal text-xs font-mono mb-8">
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono mb-8 transition-colors ${
+            renderMode === 'webgl2'
+              ? 'bg-blue/10 border border-blue/20 text-teal'
+              : 'bg-white/5 border border-white/10 text-zinc-500'
+          }`}>
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-teal" />
+              {renderMode === 'webgl2' ? (
+                <>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-teal" />
+                </>
+              ) : (
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-zinc-600" />
+              )}
             </span>
-            GPU-accelerated WebGL rendering
+            {renderMode === 'webgl2' ? 'GPU-accelerated WebGL rendering' : `Renderer: ${renderMode === 'canvas2d' ? 'Canvas 2D (CPU)' : renderMode === 'css' ? 'CSS Gradient' : 'None'}`}
           </div>
 
           <h1 className="font-display font-bold text-5xl sm:text-6xl lg:text-8xl tracking-tighter leading-[0.9]">

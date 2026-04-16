@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import './App.css'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
@@ -8,6 +9,8 @@ import FeatureGrid from './components/FeatureGrid'
 import Footer from './components/Footer'
 
 export default function App() {
+  const [activePreset, setActivePreset] = useState(null)
+
   return (
     <div className="selection:bg-teal/30 selection:text-white">
       {/* Global Grid Overlay */}
@@ -16,9 +19,9 @@ export default function App() {
       <Navbar />
 
       <main className="relative z-10 w-full flex flex-col items-center">
-        <Hero />
+        <Hero activePreset={activePreset} onPresetApplied={() => setActivePreset(null)} />
 
-        <ThemeGallery />
+        <ThemeGallery onApplyPreset={setActivePreset} />
 
         <BentoFeatures />
 
