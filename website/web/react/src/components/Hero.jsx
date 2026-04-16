@@ -597,14 +597,14 @@ export default function Hero({ activePreset, onPresetApplied }) {
       </div>
 
       {/* Scroll */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-zinc-500 z-20">
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center gap-2 text-zinc-500 z-20">
         <span className="text-[10px] font-mono tracking-widest uppercase">Scroll</span>
         <CaretDown size={16} className="animate-bounce" />
       </div>
     </section>
 
     {/* Mobile: Parameters Panel — below hero, full width */}
-    <div id="params-mobile" className="md:hidden relative z-20 pb-8 overflow-hidden scroll-mt-20 w-full px-6">
+    <div id="params-mobile" className="md:hidden relative z-20 pb-8 overflow-hidden scroll-mt-[72px] w-full px-6">
       {renderPanel(true)}
     </div>
     </>

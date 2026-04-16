@@ -2,7 +2,7 @@ import { Cpu, Atom, FileJs, MagicWand } from '@phosphor-icons/react'
 
 export default function BentoFeatures() {
   return (
-    <section id="features" className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-32 z-20">
+    <section id="features" className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-32 z-20 scroll-mt-[58px]">
       <div className="mb-16">
         <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-white mb-4">Architecture of fluid.</h2>
         <p className="text-muted font-light max-w-2xl text-lg">

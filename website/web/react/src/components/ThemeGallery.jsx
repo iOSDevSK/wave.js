@@ -72,7 +72,7 @@ export default function ThemeGallery({ onApplyPreset }) {
   }
 
   return (
-    <section id="themes" className="py-16 md:py-24 border-y border-white/[0.02] relative overflow-hidden w-full">
+    <section id="themes" className="py-16 md:py-24 border-y border-white/[0.02] relative overflow-hidden w-full scroll-mt-[58px]">
       <div className="max-w-7xl mx-auto px-6">
         <div className="mb-8 md:mb-12">
           <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">Sample Themes</h2>
