@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Copy, Check, Atom, FileJs } from '@phosphor-icons/react'
 
 const codeVanilla = [
-  { type: 'comment', text: '// 1. Import the library' },
+  { type: 'comment', text: '// Import the library' },
   { type: 'code', parts: [
     { cls: 'token-keyword', text: 'import' },
     { text: ' { WaveBackground } ' },
@@ -11,29 +11,29 @@ const codeVanilla = [
     { cls: 'token-string', text: "'@redesigner/wave.js'" },
   ]},
   { type: 'blank' },
-  { type: 'comment', text: '// 2. Initialize on a container' },
+  { type: 'comment', text: '// Initialize on any container' },
   { type: 'code', parts: [
     { cls: 'token-keyword', text: 'const' },
     { text: ' wave = ' },
     { cls: 'token-keyword', text: 'new' },
     { text: ' ' },
     { cls: 'token-function', text: 'WaveBackground' },
-    { text: "(" },
+    { text: '(' },
     { cls: 'token-string', text: "'#hero'" },
     { text: ', {' },
   ]},
   { type: 'code', parts: [
-    { text: '  theme: ' },
+    { text: '    theme:     ' },
     { cls: 'token-string', text: "'sunset'" },
     { text: ',' },
   ]},
   { type: 'code', parts: [
-    { text: '  waveCount: ' },
+    { text: '    waveCount: ' },
     { cls: 'token-number', text: '12' },
     { text: ',' },
   ]},
   { type: 'code', parts: [
-    { text: '  speed: ' },
+    { text: '    speed:     ' },
     { cls: 'token-number', text: '0.5' },
     { text: ',' },
   ]},
@@ -41,7 +41,7 @@ const codeVanilla = [
 ]
 
 const codeReact = [
-  { type: 'comment', text: '// React component with built-in controls' },
+  { type: 'comment', text: '// Import the React component' },
   { type: 'code', parts: [
     { cls: 'token-keyword', text: 'import' },
     { text: ' { HeroWave } ' },
@@ -57,51 +57,51 @@ const codeReact = [
     { text: '() {' },
   ]},
   { type: 'code', parts: [
-    { text: '  ' },
+    { text: '    ' },
     { cls: 'token-keyword', text: 'return' },
     { text: ' (' },
   ]},
   { type: 'code', parts: [
-    { text: '    <' },
+    { text: '        <' },
     { cls: 'token-function', text: 'HeroWave' },
-  ]},
-  { type: 'code', parts: [
-    { text: '      theme=' },
+    { text: ' theme=' },
     { cls: 'token-string', text: '"sunset"' },
+    { text: '>' },
   ]},
-  { type: 'code', parts: [{ text: '    >' }] },
   { type: 'code', parts: [
-    { text: '      <' },
+    { text: '            <' },
     { cls: 'token-function', text: 'h1' },
     { text: '>Your Content</' },
     { cls: 'token-function', text: 'h1' },
     { text: '>' },
   ]},
   { type: 'code', parts: [
-    { text: '    </' },
+    { text: '        </' },
     { cls: 'token-function', text: 'HeroWave' },
     { text: '>' },
   ]},
-  { type: 'code', parts: [{ text: '  )' }] },
+  { type: 'code', parts: [
+    { text: '    )' },
+  ]},
   { type: 'code', parts: [{ text: '}' }] },
 ]
 
 const rawVanilla = `import { WaveBackground } from '@redesigner/wave.js'
 
 const wave = new WaveBackground('#hero', {
-  theme: 'sunset',
-  waveCount: 12,
-  speed: 0.5,
+    theme:     'sunset',
+    waveCount: 12,
+    speed:     0.5,
 })`
 
 const rawReact = `import { HeroWave } from '@redesigner/wave.js/react'
 
 function App() {
-  return (
-    <HeroWave theme="sunset">
-      <h1>Your Content</h1>
-    </HeroWave>
-  )
+    return (
+        <HeroWave theme="sunset">
+            <h1>Your Content</h1>
+        </HeroWave>
+    )
 }`
 
 export default function CodeSection() {
