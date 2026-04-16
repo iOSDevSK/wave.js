@@ -509,6 +509,7 @@ export default function Hero({ activePreset, onPresetApplied }) {
   }
 
   return (
+    <>
     <section ref={heroRef} className="relative min-h-screen w-full flex items-center justify-center pt-20 overflow-hidden bg-void">
       {/* Grid overlay — always visible above wave canvas */}
       <div className="absolute inset-0 bg-grid-pattern pointer-events-none z-10" />
@@ -569,8 +570,16 @@ export default function Hero({ activePreset, onPresetApplied }) {
             </a>
           </div>
 
+          {/* Mobile: Button to scroll to params */}
+          <a
+            href="#params-mobile"
+            className="md:hidden mt-4 w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-medium text-teal border border-teal/30 bg-teal/10 active:bg-teal/20 transition-colors"
+          >
+            <Faders size={16} /> Customize Parameters
+          </a>
+
           {/* Trust Bar */}
-          <div className="mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-xs font-mono text-muted/60 uppercase tracking-widest">
+          <div className="mt-8 lg:mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 text-[10px] sm:text-xs font-mono text-muted/60 uppercase tracking-widest">
             <span className="flex items-center gap-2"><ShieldCheck size={14} /> MIT Licensed</span>
             <span className="hidden sm:inline text-white/20">|</span>
             <span className="flex items-center gap-2"><Gauge size={14} /> 60fps</span>
@@ -581,113 +590,9 @@ export default function Hero({ activePreset, onPresetApplied }) {
           </div>
         </div>
 
-        {/* Right: Full Parameters Panel — absolute so collapse doesn't shift layout */}
+        {/* Desktop: Parameters Panel — absolute */}
         <div ref={panelWrapRef} className="absolute right-6 hidden md:block" style={{ width: '22%', top: panelTopPx != null ? panelTopPx : '50%', transform: panelTopPx != null ? 'none' : 'translateY(-50%)' }}>
-
-          <div
-            className="relative rounded-[14px] w-full"
-            style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)' }}
-          >
-            {/* Header — always visible */}
-            <div className={`flex items-center justify-between px-4 py-2.5 ${panelOpen ? 'border-b border-white/10' : ''}`}>
-              <h3 className="text-sm font-medium flex items-center gap-2 text-white">
-                <Faders size={16} className="text-teal" /> Parameters
-              </h3>
-              <div className="flex items-center gap-2">
-                <button onClick={resetDefaults} className="text-[10px] font-mono text-zinc-500 hover:text-teal transition-colors flex items-center gap-1" title="Reset to defaults">
-                  <ArrowCounterClockwise size={12} /> Reset
-                </button>
-                <button onClick={() => setPanelOpen(o => !o)} className="text-zinc-500 hover:text-white transition-colors" title={panelOpen ? 'Collapse' : 'Expand'}>
-                  <CaretUp size={16} className={`transition-transform duration-300 ${panelOpen ? '' : 'rotate-180'}`} />
-                </button>
-              </div>
-            </div>
-
-            {/* Body — animated slide */}
-            <div
-              className="transition-all duration-400 ease-in-out overflow-hidden"
-              style={{ maxHeight: panelOpen ? 1200 : 0, opacity: panelOpen ? 1 : 0 }}
-            >
-              <div ref={panelRef} className="p-4 space-y-2">
-
-              {/* 12 Sliders */}
-              {SLIDER_DEFS.map(s => (
-                <ParamSlider key={s.key} label={s.label} value={params[s.key]} min={s.min} max={s.max} step={s.step} onChange={v => setParam(s.key, v)} />
-              ))}
-
-              {/* Divider */}
-              <div className="border-t border-white/5 pt-2">
-                <div className="text-[10px] uppercase tracking-wider text-muted font-mono mb-1.5">Color Theme</div>
-                <div className="flex gap-1.5 flex-wrap">
-                  {Object.keys(COLOR_THEMES).map(name => (
-                    <button
-                      key={name}
-                      onClick={() => { userPickedTheme.current = true; setCurrentTheme(name) }}
-                      title={name}
-                      className="w-[30px] h-[30px] rounded-full cursor-pointer transition-all"
-                      style={{
-                        background: `linear-gradient(135deg, ${COLOR_THEMES[name][1]}, ${COLOR_THEMES[name][2]})`,
-                        border: currentTheme === name ? '2px solid white' : '2px solid rgba(255,255,255,0.15)',
-                        transform: currentTheme === name ? 'scale(1.15)' : 'scale(1)',
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Custom Colors */}
-              <div>
-                <div className="text-[10px] uppercase tracking-wider text-muted font-mono mb-1.5">Custom Colors</div>
-                <div className="flex gap-1.5">
-                  {colors.map((c, i) => (
-                    <ColorSwatch
-                      key={i}
-                      color={c}
-                      opacity={colorOpacities[i]}
-                      panelRef={panelRef}
-                      onColorChange={(val) => {
-                        const newColors = [...colors]; newColors[i] = val; setCustomColors(newColors)
-                        userPickedTheme.current = true; setCurrentTheme('custom')
-                      }}
-                      onOpacityChange={(val) => {
-                        const newOpacities = [...colorOpacities]; newOpacities[i] = val; setColorOpacities(newOpacities)
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Toggles */}
-              <div className="border-t border-white/5 pt-2 space-y-1.5">
-                <Toggle label="Split Fill" value={splitFill} onToggle={setSplitFill} />
-                <Toggle label="Glass" value={glass} onToggle={setGlass} />
-                <Toggle label="Liquid Metal" value={liquidMetal} onToggle={setLiquidMetal} />
-              </div>
-
-              {/* Conditional Liquify */}
-              {liquidMetal && (
-                <div className="pl-2 border-l-2 border-white/10">
-                  <ParamSlider label="Liquify" value={params.lmLiquid} min={0} max={0.2} step={0.001} onChange={v => setParam('lmLiquid', v)} />
-                </div>
-              )}
-
-              {/* Renderer */}
-              <div className="border-t border-white/5 pt-2">
-                <div className="text-[10px] uppercase tracking-wider text-muted font-mono mb-1.5">Renderer</div>
-                <select
-                  value={renderMode}
-                  onChange={e => handleRenderModeChange(e.target.value)}
-                  className="w-full py-1.5 px-2 bg-white/[0.08] border border-white/[0.12] rounded-md text-white text-xs cursor-pointer font-mono outline-none appearance-none"
-                >
-                  <option value="webgl2" style={{ background: '#111' }}>WebGL2 (GPU)</option>
-                  <option value="canvas2d" style={{ background: '#111' }}>Canvas 2D (CPU)</option>
-                  <option value="css" style={{ background: '#111' }}>CSS Gradient (Static)</option>
-                  <option value="none" style={{ background: '#111' }}>None (Solid Color)</option>
-                </select>
-              </div>
-            </div>
-            </div>
-          </div>
+          {renderPanel(false)}
         </div>
       </div>
 
@@ -697,5 +602,120 @@ export default function Hero({ activePreset, onPresetApplied }) {
         <CaretDown size={16} className="animate-bounce" />
       </div>
     </section>
+
+    {/* Mobile: Parameters Panel — below hero, full width */}
+    <div id="params-mobile" className="md:hidden relative z-20 pb-8 overflow-hidden scroll-mt-20 w-full px-6">
+      {renderPanel(true)}
+    </div>
+    </>
   )
+
+  function renderPanel(isMobile) {
+    return (
+      <div
+        className="relative rounded-[14px] w-full"
+        style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)' }}
+      >
+        {/* Header */}
+        <div className={`flex items-center justify-between px-4 py-2.5 ${panelOpen ? 'border-b border-white/10' : ''}`}>
+          <h3 className="text-sm font-medium flex items-center gap-2 text-white">
+            <Faders size={16} className="text-teal" /> Parameters
+          </h3>
+          <div className="flex items-center gap-2">
+            <button onClick={resetDefaults} className="text-[10px] font-mono text-zinc-500 hover:text-teal transition-colors flex items-center gap-1" title="Reset to defaults">
+              <ArrowCounterClockwise size={12} /> Reset
+            </button>
+            <button onClick={() => setPanelOpen(o => !o)} className="text-zinc-500 hover:text-white transition-colors" title={panelOpen ? 'Collapse' : 'Expand'}>
+              <CaretUp size={16} className={`transition-transform duration-300 ${panelOpen ? '' : 'rotate-180'}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div
+          className="transition-all duration-400 ease-in-out overflow-hidden"
+          style={{ maxHeight: panelOpen ? 2000 : 0, opacity: panelOpen ? 1 : 0 }}
+        >
+          <div ref={isMobile ? undefined : panelRef} className={`${isMobile ? 'p-4 space-y-3' : 'p-4 space-y-2'}`}>
+
+            {/* 12 Sliders */}
+            {SLIDER_DEFS.map(s => (
+              <ParamSlider key={s.key} label={s.label} value={params[s.key]} min={s.min} max={s.max} step={s.step} onChange={v => setParam(s.key, v)} />
+            ))}
+
+            {/* Color Theme */}
+            <div className="border-t border-white/5 pt-2">
+              <div className="text-[10px] uppercase tracking-wider text-muted font-mono mb-1.5">Color Theme</div>
+              <div className="flex gap-1.5 flex-wrap">
+                {Object.keys(COLOR_THEMES).map(name => (
+                  <button
+                    key={name}
+                    onClick={() => { userPickedTheme.current = true; setCurrentTheme(name) }}
+                    title={name}
+                    className="w-[30px] h-[30px] rounded-full cursor-pointer transition-all"
+                    style={{
+                      background: `linear-gradient(135deg, ${COLOR_THEMES[name][1]}, ${COLOR_THEMES[name][2]})`,
+                      border: currentTheme === name ? '2px solid white' : '2px solid rgba(255,255,255,0.15)',
+                      transform: currentTheme === name ? 'scale(1.15)' : 'scale(1)',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Colors */}
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-muted font-mono mb-1.5">Custom Colors</div>
+              <div className="flex gap-1.5">
+                {colors.map((c, i) => (
+                  <ColorSwatch
+                    key={i}
+                    color={c}
+                    opacity={colorOpacities[i]}
+                    panelRef={panelRef}
+                    onColorChange={(val) => {
+                      const newColors = [...colors]; newColors[i] = val; setCustomColors(newColors)
+                      userPickedTheme.current = true; setCurrentTheme('custom')
+                    }}
+                    onOpacityChange={(val) => {
+                      const newOpacities = [...colorOpacities]; newOpacities[i] = val; setColorOpacities(newOpacities)
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Toggles */}
+            <div className="border-t border-white/5 pt-2 space-y-1.5">
+              <Toggle label="Split Fill" value={splitFill} onToggle={setSplitFill} />
+              <Toggle label="Glass" value={glass} onToggle={setGlass} />
+              <Toggle label="Liquid Metal" value={liquidMetal} onToggle={setLiquidMetal} />
+            </div>
+
+            {/* Conditional Liquify */}
+            {liquidMetal && (
+              <div className="pl-2 border-l-2 border-white/10">
+                <ParamSlider label="Liquify" value={params.lmLiquid} min={0} max={0.2} step={0.001} onChange={v => setParam('lmLiquid', v)} />
+              </div>
+            )}
+
+            {/* Renderer */}
+            <div className="border-t border-white/5 pt-2">
+              <div className="text-[10px] uppercase tracking-wider text-muted font-mono mb-1.5">Renderer</div>
+              <select
+                value={renderMode}
+                onChange={e => handleRenderModeChange(e.target.value)}
+                className="w-full py-1.5 px-2 bg-white/[0.08] border border-white/[0.12] rounded-md text-white text-xs cursor-pointer font-mono outline-none appearance-none"
+              >
+                <option value="webgl2" style={{ background: '#111' }}>WebGL2 (GPU)</option>
+                <option value="canvas2d" style={{ background: '#111' }}>Canvas 2D (CPU)</option>
+                <option value="css" style={{ background: '#111' }}>CSS Gradient (Static)</option>
+                <option value="none" style={{ background: '#111' }}>None (Solid Color)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 }

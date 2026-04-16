@@ -2,7 +2,7 @@ import { Cpu, Atom, FileJs, MagicWand } from '@phosphor-icons/react'
 
 export default function BentoFeatures() {
   return (
-    <section id="features" className="relative w-full max-w-7xl mx-auto px-6 py-32 z-20">
+    <section id="features" className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-32 z-20">
       <div className="mb-16">
         <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight text-white mb-4">Architecture of fluid.</h2>
         <p className="text-muted font-light max-w-2xl text-lg">
@@ -58,8 +58,8 @@ export default function BentoFeatures() {
         </div>
 
         {/* Renderer Fallbacks */}
-        <div className="bento-item p-0 md:col-span-2 relative overflow-hidden group flex border-l border-white/5">
-          <div className="w-1/2 p-8 flex flex-col justify-center relative z-10 bg-[#0a0a0a]">
+        <div className="bento-item p-0 md:col-span-2 relative overflow-hidden group flex flex-col md:flex-row border-l border-white/5">
+          <div className="w-full md:w-1/2 p-8 flex flex-col justify-center relative z-10 bg-[#0a0a0a]">
             <div className="w-10 h-10 bg-white/5 border border-white/10 rounded flex items-center justify-center mb-4">
               <MagicWand size={20} className="text-blue" />
             </div>
@@ -69,7 +69,7 @@ export default function BentoFeatures() {
             </p>
           </div>
 
-          <div className="w-1/2 bg-[#050505] relative overflow-hidden border-l border-white/5 flex items-center justify-center">
+          <div className="w-full md:w-1/2 bg-[#050505] relative overflow-hidden border-t md:border-t-0 md:border-l border-white/5 flex items-center justify-center min-h-[200px]">
             <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiNmZmYiLz48L3N2Zz4=')]" />
             <div className="w-48 h-32 border border-teal/30 rounded flex flex-col p-2 bg-[#0a0a0a]/80 backdrop-blur z-10 shadow-[0_0_30px_rgba(0,240,255,0.1)] group-hover:shadow-[0_0_40px_rgba(0,240,255,0.2)] transition-shadow">
               <div className="text-[8px] font-mono text-teal mb-2">RENDERER_CHAIN</div>

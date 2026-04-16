@@ -21,13 +21,13 @@ export default function App() {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
 
   return (
-    <div className="selection:bg-teal/30 selection:text-white">
+    <div className="selection:bg-teal/30 selection:text-white overflow-x-hidden">
       {/* Global Grid Overlay */}
       <div className="fixed inset-0 bg-grid-pattern pointer-events-none z-0" />
 
       <Navbar />
 
-      <main className="relative z-10 w-full flex flex-col items-center">
+      <main className="relative z-10 w-full flex flex-col items-center overflow-x-hidden">
         <Hero activePreset={activePreset} onPresetApplied={() => setActivePreset(null)} />
 
         <ThemeGallery onApplyPreset={setActivePreset} />

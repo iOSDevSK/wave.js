@@ -127,7 +127,7 @@ export default function CodeSection() {
   }
 
   return (
-    <section id="code" className="py-32 px-6 relative overflow-hidden">
+    <section id="code" className="py-16 md:py-32 px-4 sm:px-6 relative overflow-hidden w-full">
 
       <div className="max-w-4xl mx-auto text-center mb-16 relative z-10">
         <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">
