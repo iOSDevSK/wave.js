@@ -1,5 +1,5 @@
 import { ArrowLeft, ArrowRight } from '@phosphor-icons/react'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 // Real themes from wave.js themes.js with exact time-of-day ranges
 const presets = [
@@ -47,29 +47,57 @@ export default function ThemeGallery() {
   const [offset, setOffset] = useState(0)
   const canLeft = offset > 0
   const canRight = offset + 3 < presets.length
+  const thumbsRef = useRef(null)
+  const [thumbH, setThumbH] = useState(0)
+
+  useEffect(() => {
+    const measure = () => {
+      if (thumbsRef.current) {
+        const firstThumb = thumbsRef.current.querySelector('[data-thumb]')
+        if (firstThumb) setThumbH(firstThumb.offsetHeight)
+      }
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
 
   const trackTransform = `translateX(calc(-${offset} * (100% + ${GAP}px) / 3))`
 
   return (
-    <section className="py-24 border-y border-white/[0.02] relative">
+    <section id="themes" className="py-24 border-y border-white/[0.02] relative">
       <div className="max-w-7xl mx-auto px-6">
         <div className="mb-12">
           <h2 className="font-display text-3xl font-bold mb-2">Sample Themes</h2>
           <p className="text-muted">Auto time-of-day detection or pick your own.</p>
         </div>
 
-        {/* Row: arrow — thumbnails only — arrow, items-center = perfect Y center */}
-        <div className="flex items-center">
+        {/* Thumbnails + arrows */}
+        <div className="relative">
+          {/* Left arrow — outside content, centered to thumbnails */}
           <button
             onClick={() => canLeft && setOffset(o => o - 1)}
-            className={`shrink-0 w-12 h-12 rounded-full border-2 border-white/20 flex items-center justify-center transition-all mr-4 ${
+            className={`absolute z-10 w-12 h-12 rounded-full border-2 border-white/20 flex items-center justify-center transition-all -left-16 ${
               canLeft ? 'hover:bg-white/10 hover:border-white/40 text-white/80 hover:text-white cursor-pointer' : 'text-white/15 border-white/10 cursor-default'
             }`}
+            style={{ top: thumbH ? thumbH / 2 - 24 : '25%' }}
           >
             <ArrowLeft size={18} weight="bold" />
           </button>
 
-          <div className="flex-1 min-w-0 overflow-hidden">
+          {/* Right arrow — outside content, centered to thumbnails */}
+          <button
+            onClick={() => canRight && setOffset(o => o + 1)}
+            className={`absolute z-10 w-12 h-12 rounded-full border-2 border-white/20 flex items-center justify-center transition-all -right-16 ${
+              canRight ? 'hover:bg-white/10 hover:border-white/40 text-white/80 hover:text-white cursor-pointer' : 'text-white/15 border-white/10 cursor-default'
+            }`}
+            style={{ top: thumbH ? thumbH / 2 - 24 : '25%' }}
+          >
+            <ArrowRight size={18} weight="bold" />
+          </button>
+
+          {/* Sliding thumbnails */}
+          <div className="overflow-hidden" ref={thumbsRef}>
             <div
               className="flex transition-transform duration-500 ease-out"
               style={{ gap: GAP, transform: trackTransform }}
@@ -77,6 +105,7 @@ export default function ThemeGallery() {
               {presets.map((p) => (
                 <div
                   key={p.name}
+                  data-thumb
                   className="shrink-0 aspect-video rounded-xl overflow-hidden border-gradient relative"
                   style={{ width: `calc((100% - ${GAP * 2}px) / 3)` }}
                 >
@@ -87,34 +116,25 @@ export default function ThemeGallery() {
             </div>
           </div>
 
-          <button
-            onClick={() => canRight && setOffset(o => o + 1)}
-            className={`shrink-0 w-12 h-12 rounded-full border-2 border-white/20 flex items-center justify-center transition-all ml-4 ${
-              canRight ? 'hover:bg-white/10 hover:border-white/40 text-white/80 hover:text-white cursor-pointer' : 'text-white/15 border-white/10 cursor-default'
-            }`}
-          >
-            <ArrowRight size={18} weight="bold" />
-          </button>
-        </div>
-
-        {/* Labels — same sliding offset, aligned under thumbnails */}
-        <div className="overflow-hidden" style={{ marginLeft: 64, marginRight: 64 }}>
-          <div
-            className="flex transition-transform duration-500 ease-out mt-4"
-            style={{ gap: GAP, transform: trackTransform }}
-          >
-            {presets.map((p) => (
-              <div
-                key={p.name}
-                className="shrink-0"
-                style={{ width: `calc((100% - ${GAP * 2}px) / 3)` }}
-              >
-                <h4 className="font-medium text-white">
-                  {p.name} <span className="text-xs text-muted font-mono ml-1">{p.time}</span>
-                </h4>
-                <p className="text-sm font-mono text-muted">{p.desc}</p>
-              </div>
-            ))}
+          {/* Labels */}
+          <div className="overflow-hidden">
+            <div
+              className="flex transition-transform duration-500 ease-out mt-4"
+              style={{ gap: GAP, transform: trackTransform }}
+            >
+              {presets.map((p) => (
+                <div
+                  key={p.name}
+                  className="shrink-0"
+                  style={{ width: `calc((100% - ${GAP * 2}px) / 3)` }}
+                >
+                  <h4 className="font-medium text-white">
+                    {p.name} <span className="text-xs text-muted font-mono ml-1">{p.time}</span>
+                  </h4>
+                  <p className="text-sm font-mono text-muted">{p.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

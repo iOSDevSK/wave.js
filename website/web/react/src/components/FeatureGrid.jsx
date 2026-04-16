@@ -59,7 +59,7 @@ const colorMap = {
 
 export default function FeatureGrid() {
   return (
-    <section className="pt-24 pb-32 px-6">
+    <section id="why" className="pt-24 pb-32 px-6">
       <div className="max-w-7xl mx-auto rounded-2xl border border-white/[0.08] bg-surface/40 p-10 md:p-14">
         <div className="text-center mb-12">
           <h2 className="font-display text-3xl font-bold mb-4">Architected for production.</h2>

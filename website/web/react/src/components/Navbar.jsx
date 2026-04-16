@@ -1,6 +1,20 @@
 import { GithubLogo } from '@phosphor-icons/react'
 import WaveLogo from './WaveLogo'
 
+function NavLink({ href, children, external }) {
+  const props = external ? { target: '_blank', rel: 'noopener noreferrer' } : {}
+  return (
+    <a
+      href={href}
+      className="relative text-muted hover:text-white transition-colors py-1 group"
+      {...props}
+    >
+      {children}
+      <span className="absolute bottom-0 left-0 h-[2px] w-0 group-hover:w-full transition-all duration-300 rounded-full bg-gradient-to-r from-teal to-blue" />
+    </a>
+  )
+}
+
 export default function Navbar() {
   return (
     <nav className="fixed top-0 w-full z-50 glass-panel border-b-0">
@@ -10,11 +24,13 @@ export default function Navbar() {
           <span className="font-display font-bold tracking-tight text-lg">Wave.js</span>
         </div>
 
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted">
-          <a href="#features" className="hover:text-white transition-colors">Features</a>
-          <a href="#playground" className="hover:text-white transition-colors">Playground</a>
-          <a href="#code" className="hover:text-white transition-colors">Documentation</a>
-          <a href="https://github.com/iOSDevSK/wave.js" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">GitHub</a>
+        <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+          <NavLink href="#">Home</NavLink>
+          <NavLink href="#themes">Themes</NavLink>
+          <NavLink href="#features">Features</NavLink>
+          <NavLink href="#code">Code</NavLink>
+          <NavLink href="#why">Why Wave.js</NavLink>
+          <NavLink href="https://github.com/iOSDevSK/wave.js" external>GitHub</NavLink>
         </div>
 
         <div className="flex items-center gap-4">
