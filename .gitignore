@@ -25,3 +25,4 @@ dist-ssr
 screenshots/
 examples/*/node_modules
 publish.sh
+API_FOR_CLAUDE.md
