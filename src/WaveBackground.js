@@ -25,6 +25,13 @@ export default class WaveBackground {
     this._colorTransition = null
     this._destroyed = false
     this._preferredRenderer = options.renderer || 'auto'
+    // Perf: cap pixel ratio (retina adds 4x pixels for soft gradient content),
+    // throttle FPS (ProMotion 120Hz displays double GPU work), and pause when hidden/offscreen.
+    this._pixelRatio = options.pixelRatio ?? 1
+    this._maxFPS = options.maxFPS ?? 60
+    this._tabVisible = typeof document === 'undefined' || document.visibilityState !== 'hidden'
+    this._inView = true
+    this._lastFrameTime = 0
 
     this._createCanvas()
     this._createRenderer()
@@ -56,8 +63,25 @@ export default class WaveBackground {
 
   setColorOpacities(arr) { this.colorOpacities = [...arr] }
   setSplitFill(v) { this.splitFill = v }
-  setGlass(v) { this.glass = v }
-  setLiquidMetal(v) { this.liquidMetal = v }
+  setGlass(v) {
+    this.glass = v
+    if (this.renderer && this.renderer.setFeatures) {
+      this.renderer.setFeatures({ glass: this.glass, liquidMetal: this.liquidMetal })
+    }
+  }
+  setLiquidMetal(v) {
+    this.liquidMetal = v
+    if (this.renderer && this.renderer.setFeatures) {
+      this.renderer.setFeatures({ glass: this.glass, liquidMetal: this.liquidMetal })
+    }
+  }
+
+  setPixelRatio(ratio) {
+    this._pixelRatio = ratio
+    this._resize()
+  }
+
+  setMaxFPS(fps) { this._maxFPS = fps }
 
   setRenderMode(mode) {
     if (mode === this._renderMode) return
@@ -74,7 +98,7 @@ export default class WaveBackground {
       this._createCanvas()
       const gl = this.canvas.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' })
       if (gl) {
-        this.renderer = new WebGLRenderer(this.canvas, gl)
+        this.renderer = new WebGLRenderer(this.canvas, gl, { glass: this.glass, liquidMetal: this.liquidMetal })
         this._renderMode = mode
         this._resize()
         if (!this._raf) this._startLoop()
@@ -111,6 +135,8 @@ export default class WaveBackground {
     window.removeEventListener('resize', this._onResize)
     this.container.removeEventListener('mousemove', this._onMouseMove)
     this.container.removeEventListener('mouseleave', this._onMouseLeave)
+    if (this._onVisibility) document.removeEventListener('visibilitychange', this._onVisibility)
+    if (this._observer) { this._observer.disconnect(); this._observer = null }
     if (this.renderer) this.renderer.destroy()
     if (this.canvas && this.canvas.parentNode) this.canvas.parentNode.removeChild(this.canvas)
   }
@@ -138,7 +164,7 @@ export default class WaveBackground {
     const gl = this.canvas.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' })
     if (gl) {
       try {
-        this.renderer = new WebGLRenderer(this.canvas, gl)
+        this.renderer = new WebGLRenderer(this.canvas, gl, { glass: this.glass, liquidMetal: this.liquidMetal })
         this._renderMode = 'webgl2'
         return
       } catch (e) {
@@ -181,17 +207,40 @@ export default class WaveBackground {
       this._mouseTarget.y = 1 - (e.clientY - rect.top) / rect.height
     }
     this._onMouseLeave = () => { this._mouseTarget.x = 0.5; this._mouseTarget.y = 0.5 }
+    this._onVisibility = () => {
+      this._tabVisible = document.visibilityState !== 'hidden'
+      this._updateRunState()
+    }
     window.addEventListener('resize', this._onResize)
     this.container.addEventListener('mousemove', this._onMouseMove)
     this.container.addEventListener('mouseleave', this._onMouseLeave)
+    document.addEventListener('visibilitychange', this._onVisibility)
+
+    if (typeof IntersectionObserver !== 'undefined') {
+      this._observer = new IntersectionObserver((entries) => {
+        this._inView = entries[0].isIntersecting
+        this._updateRunState()
+      }, { threshold: 0 })
+      this._observer.observe(this.container)
+    }
   }
 
   _resize() {
     if (!this.canvas || !this.renderer) return
-    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    const dpr = Math.min(window.devicePixelRatio || 1, this._pixelRatio)
     const w = this.container.clientWidth
     const h = this.container.clientHeight
-    this.renderer.resize(w * dpr, h * dpr)
+    this.renderer.resize(Math.max(1, Math.round(w * dpr)), Math.max(1, Math.round(h * dpr)))
+  }
+
+  _updateRunState() {
+    const animated = this._renderMode !== 'css' && this._renderMode !== 'none'
+    const shouldRun = animated && this._tabVisible && this._inView && !this._destroyed
+    if (shouldRun && !this._raf) this._startLoop()
+    else if (!shouldRun && this._raf) {
+      cancelAnimationFrame(this._raf)
+      this._raf = null
+    }
   }
 
   _animateColorsTo(targetRgb) {
@@ -214,12 +263,19 @@ export default class WaveBackground {
   }
 
   _startLoop() {
-    if (this._renderMode === 'css') return
-    this._startTime = performance.now()
-    const loop = () => {
-      if (this._destroyed) return
-      this._tick()
+    if (this._renderMode === 'css' || this._renderMode === 'none') return
+    if (!this._startTime) this._startTime = performance.now()
+    const loop = (now) => {
+      if (this._destroyed) { this._raf = null; return }
       this._raf = requestAnimationFrame(loop)
+      // Throttle to maxFPS (0 means uncapped). Subtract a small epsilon so 60fps
+      // actually hits on 16.67ms-spaced RAF ticks.
+      if (this._maxFPS > 0) {
+        const minInterval = 1000 / this._maxFPS
+        if (now - this._lastFrameTime < minInterval - 0.5) return
+        this._lastFrameTime = now
+      }
+      this._tick()
     }
     this._raf = requestAnimationFrame(loop)
   }

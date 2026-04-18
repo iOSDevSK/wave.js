@@ -1,47 +1,61 @@
 import vertexSource from '../shaders/waveVertex.glsl'
 import fragmentSource from '../shaders/waveFragment.glsl'
 
+const UNIFORM_NAMES = [
+  'u_time', 'u_seed', 'u_resolution',
+  'u_color1', 'u_color2', 'u_color3', 'u_color4',
+  'u_colorOpacity1', 'u_colorOpacity2', 'u_colorOpacity3', 'u_colorOpacity4',
+  'u_mouse', 'u_waveCount', 'u_speed', 'u_amplitude', 'u_frequency',
+  'u_opacity', 'u_thickness', 'u_blur', 'u_concentration',
+  'u_randomness', 'u_thicknessRandom', 'u_verticalOffset', 'u_rotation',
+  'u_splitFill', 'u_glass', 'u_liquidMetal', 'u_lmLiquid',
+]
+
 export class WebGLRenderer {
-  constructor(canvas, gl) {
+  constructor(canvas, gl, features = {}) {
     this.canvas = canvas
     this.gl = gl
-    this._init()
+    this.features = { glass: !!features.glass, liquidMetal: !!features.liquidMetal }
+    this._initBuffer()
+    this._buildProgram()
   }
 
-  _init() {
+  _initBuffer() {
     const gl = this.gl
-    // Compile shaders
+    this.buf = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buf)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
+  }
+
+  _buildProgram() {
+    const gl = this.gl
+    const defines =
+      (this.features.glass ? '#define HAS_GLASS 1\n' : '') +
+      (this.features.liquidMetal ? '#define HAS_LIQUID_METAL 1\n' : '')
+
     const vs = this._compile(gl.VERTEX_SHADER, vertexSource)
-    const fs = this._compile(gl.FRAGMENT_SHADER, fragmentSource)
-    this.program = gl.createProgram()
-    gl.attachShader(this.program, vs)
-    gl.attachShader(this.program, fs)
-    gl.linkProgram(this.program)
-    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-      console.error('Shader link error:', gl.getProgramInfoLog(this.program))
+    const fs = this._compile(gl.FRAGMENT_SHADER, defines + fragmentSource)
+    const program = gl.createProgram()
+    gl.attachShader(program, vs)
+    gl.attachShader(program, fs)
+    gl.linkProgram(program)
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error('Shader link error:', gl.getProgramInfoLog(program))
     }
+    gl.deleteShader(vs)
+    gl.deleteShader(fs)
+
+    if (this.program) gl.deleteProgram(this.program)
+    this.program = program
     gl.useProgram(this.program)
 
-    // Fullscreen quad
-    const buf = gl.createBuffer()
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buf)
     const posLoc = gl.getAttribLocation(this.program, 'a_position')
     gl.enableVertexAttribArray(posLoc)
     gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0)
 
-    // Cache uniform locations
     this.locs = {}
-    const names = [
-      'u_time', 'u_seed', 'u_resolution',
-      'u_color1', 'u_color2', 'u_color3', 'u_color4',
-      'u_colorOpacity1', 'u_colorOpacity2', 'u_colorOpacity3', 'u_colorOpacity4',
-      'u_mouse', 'u_waveCount', 'u_speed', 'u_amplitude', 'u_frequency',
-      'u_opacity', 'u_thickness', 'u_blur', 'u_concentration',
-      'u_randomness', 'u_thicknessRandom', 'u_verticalOffset', 'u_rotation',
-      'u_splitFill', 'u_glass', 'u_liquidMetal', 'u_lmLiquid',
-    ]
-    names.forEach(n => { this.locs[n] = gl.getUniformLocation(this.program, n) })
+    UNIFORM_NAMES.forEach(n => { this.locs[n] = gl.getUniformLocation(this.program, n) })
   }
 
   _compile(type, source) {
@@ -53,6 +67,13 @@ export class WebGLRenderer {
       console.error('Shader compile error:', gl.getShaderInfoLog(shader))
     }
     return shader
+  }
+
+  setFeatures({ glass, liquidMetal }) {
+    const g = !!glass, lm = !!liquidMetal
+    if (g === this.features.glass && lm === this.features.liquidMetal) return
+    this.features = { glass: g, liquidMetal: lm }
+    this._buildProgram()
   }
 
   render(s) {
@@ -83,9 +104,11 @@ export class WebGLRenderer {
     gl.uniform1f(l.u_verticalOffset, s.params.verticalOffset)
     gl.uniform1f(l.u_rotation, s.params.rotation * Math.PI / 180)
     gl.uniform1f(l.u_splitFill, s.splitFill ? 1 : 0)
-    gl.uniform1f(l.u_glass, s.glass ? 1 : 0)
-    gl.uniform1f(l.u_liquidMetal, s.liquidMetal ? 1 : 0)
-    gl.uniform1f(l.u_lmLiquid, s.params.lmLiquid)
+    if (this.features.glass) gl.uniform1f(l.u_glass, s.glass ? 1 : 0)
+    if (this.features.liquidMetal) {
+      gl.uniform1f(l.u_liquidMetal, s.liquidMetal ? 1 : 0)
+      gl.uniform1f(l.u_lmLiquid, s.params.lmLiquid)
+    }
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
   }
 
@@ -96,6 +119,7 @@ export class WebGLRenderer {
   }
 
   destroy() {
-    this.gl.deleteProgram(this.program)
+    if (this.program) this.gl.deleteProgram(this.program)
+    if (this.buf) this.gl.deleteBuffer(this.buf)
   }
 }

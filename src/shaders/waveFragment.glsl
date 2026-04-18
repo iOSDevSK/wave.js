@@ -30,12 +30,17 @@ uniform float u_thicknessRandom;
 uniform float u_verticalOffset;
 uniform float u_rotation;
 uniform float u_splitFill;
+#ifdef HAS_GLASS
 uniform float u_glass;
+#endif
+#ifdef HAS_LIQUID_METAL
 uniform float u_liquidMetal;
 uniform float u_lmLiquid;
+#endif
 
 varying vec2 v_uv;
 
+#ifdef HAS_LIQUID_METAL
 // Simplex noise (from MetalFlow / Ashima Arts)
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -66,6 +71,7 @@ float snoise(vec2 v) {
   g.yz = a0.yz * x12.xz + h.yz * x12.yw;
   return 130.0 * dot(m, g);
 }
+#endif
 
 void main() {
   vec2 uv = v_uv;
@@ -165,6 +171,7 @@ void main() {
     float brightness = 0.95 + 0.1 * sin(uv.x * aspect * 3.0 + t * 0.5 + fi);
     waveColor *= brightness;
 
+#ifdef HAS_GLASS
     // Glass effect: transparency, refraction, caustic highlights, soft edges
     if (u_glass > 0.5) {
       float gDistFromWave = uv.y - waveY;
@@ -190,7 +197,9 @@ void main() {
 
       alpha *= 0.75;
     }
+#endif
 
+#ifdef HAS_LIQUID_METAL
     // Liquid metal effect: smooth 3D chrome with iridescent tint
     if (u_liquidMetal > 0.5) {
       float mDist = uv.y - waveY;
@@ -257,6 +266,7 @@ void main() {
       // Apply with edge softness
       waveColor = mix(waveColor, metalColor, edgeMask);
     }
+#endif
 
     color = mix(color, waveColor, alpha * colorAlpha);
   }

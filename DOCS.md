@@ -278,6 +278,8 @@ new WaveBackground(container, options?)
 | `liquidMetal` | `boolean` | `false` | Liquid metal effect (WebGL only) |
 | `lmLiquid` | `number` | `0.07` | Liquid metal flow intensity (0–0.2) |
 | `colorOpacities` | `number[]` | `[1,1,1,1]` | Per-color opacity |
+| `pixelRatio` | `number` | `1` | Canvas pixel ratio cap. Higher values = sharper on retina but 4× GPU cost at 2×. Soft wave content looks identical at 1. |
+| `maxFPS` | `number` | `60` | FPS throttle. Set `0` to uncap. Default 60 avoids doubled GPU work on 120Hz ProMotion displays. |
 
 ### Methods
 
@@ -291,6 +293,8 @@ new WaveBackground(container, options?)
 | `setSplitFill(bool)` | Toggle split fill mode |
 | `setGlass(bool)` | Toggle glass effect |
 | `setLiquidMetal(bool)` | Toggle liquid metal effect |
+| `setPixelRatio(ratio)` | Change canvas pixel ratio and resize. Useful for trading sharpness for GPU. |
+| `setMaxFPS(fps)` | Change FPS cap at runtime. Pass `0` to uncap. |
 | `destroy()` | Stop animation, remove canvas, cleanup listeners |
 
 ### Properties

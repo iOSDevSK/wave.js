@@ -20,8 +20,11 @@ export class Canvas2DRenderer {
     ctx.fillStyle = `rgb(${bg[0] * 255 | 0},${bg[1] * 255 | 0},${bg[2] * 255 | 0})`
     ctx.fillRect(0, 0, W, H)
 
-    // Rotation — expand drawing area to cover full screen after rotation
-    const hasRotation = p.rotation !== 0
+    // Rotation — expand drawing area to cover full screen after rotation.
+    // Skip when rotation ≡ 0 mod 360 (e.g. rotation=360 default preset) to avoid
+    // the ~1.8× diagonal overdraw and save/restore/rotate matrix ops.
+    const normRot = ((p.rotation % 360) + 360) % 360
+    const hasRotation = normRot > 0.25 && normRot < 359.75
     let drawW = W, drawH = H, offsetX = 0, offsetY = 0
     if (hasRotation) {
       const diag = Math.sqrt(W * W + H * H)
@@ -31,14 +34,16 @@ export class Canvas2DRenderer {
       offsetY = (diag - H) / 2
       ctx.save()
       ctx.translate(W / 2, H / 2)
-      ctx.rotate(p.rotation * Math.PI / 180)
+      ctx.rotate(normRot * Math.PI / 180)
       ctx.translate(-W / 2, -H / 2)
     }
 
     const range = 0.85 / (1 + p.concentration)
     const startY = 0.5 + p.verticalOffset - range / 2
     const waveCount = Math.min(p.waveCount, 100)
-    const step = Math.max(2, Math.ceil(drawW / 400))
+    // Sample ~200 points across the drawing width. Sines are smooth, denser
+    // sampling is wasted; anti-aliasing handles the rest.
+    const step = Math.max(2, Math.ceil(drawW / 200))
 
     for (let i = 0; i < waveCount; i++) {
       const fi = i
