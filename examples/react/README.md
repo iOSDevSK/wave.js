@@ -183,18 +183,47 @@ function CustomWave() {
 
 This gives you full control over the wave instance without the built-in control panel.
 
+### 9. Loading settings from JSON (React)
+
+When you want the "one config, many renders" flow — e.g. you exported settings
+from the playground's **Copy JSON** button — import the JSON and hand it
+straight to the constructor. The shape matches the options 1-to-1:
+
+```jsx
+import { useEffect, useRef } from 'react'
+import { WaveBackground } from '@redesigner/wave.js'
+import config from './config.json'
+
+export default function AppFromJson() {
+  const containerRef = useRef(null)
+
+  useEffect(() => {
+    if (!containerRef.current) return
+    const wave = new WaveBackground(containerRef.current, config)
+    return () => wave.destroy()
+  }, [])
+
+  return <div ref={containerRef} style={{ width: '100%', height: '100vh' }} />
+}
+```
+
+See `src/AppFromJson.jsx` + `src/config.json` in this folder. To swap configs
+at runtime without remounting, use `wave.setConfig(newJson)`.
+
 ## File structure
 
 ```
-test/react/
+examples/react/
   src/
-    App.jsx         — Three HeroWave sections (sunset, night, daytime)
-    main.jsx        — React entry point
-    index.css       — Minimal reset
-  index.html        — HTML shell
-  package.json      — Dependencies: @redesigner/wave.js, react, react-dom
-  vite.config.js    — Vite config with React plugin
-  README.md         — This file
+    App.jsx           — Three HeroWave sections (sunset, night, daytime)
+    AppFromJson.jsx   — Loads settings from config.json (JSON-driven usage)
+    config.json       — Example exported settings (Twist preset)
+    main.jsx          — React entry point
+    index.css         — Minimal reset
+  index.html          — HTML shell
+  package.json        — Dependencies: @redesigner/wave.js, react, react-dom
+  vite.config.js      — Vite config with React plugin
+  README.md           — This file
 ```
 
 ## Browser support

@@ -11,9 +11,14 @@ export default class WaveBackground {
     // State
     this.params = { ...DEFAULTS }
     Object.keys(DEFAULTS).forEach(k => { if (options[k] !== undefined) this.params[k] = options[k] })
-    this.theme = options.theme || getTimeOfDay()
-    const themeColors = COLOR_THEMES[this.theme] || COLOR_THEMES.sunrise
-    this.colors = themeColors.map(hexToRgb)
+    this.theme = options.theme || (options.colors ? 'custom' : getTimeOfDay())
+    // Explicit hex `colors` override any theme. Useful when loading a JSON
+    // config exported from the playground — the config captures exact colors
+    // rather than a theme name.
+    const sourceColors = options.colors
+      ? options.colors
+      : (COLOR_THEMES[this.theme] || COLOR_THEMES.sunrise)
+    this.colors = sourceColors.map(hexToRgb)
     this.targetColors = this.colors.map(c => [...c])
     this.colorOpacities = options.colorOpacities ? [...options.colorOpacities] : [1, 1, 1, 1]
     this.splitFill = options.splitFill || false
@@ -80,6 +85,57 @@ export default class WaveBackground {
   }
   setLumen(v) { this.lumen = v }
   setTwist(v) { this.twist = v }
+
+  // --- Config (JSON) round-trip ---
+  // Export the current settings as a plain-JSON object. Feed this straight
+  // back into `new WaveBackground(container, config)` or `setConfig(obj)`
+  // to reproduce the look. Colors are always emitted as hex strings so the
+  // JSON is stable across themes.
+  toJSON() {
+    const rgbToHex = (rgb) => '#' + rgb.map(c => {
+      const v = Math.max(0, Math.min(255, Math.round(c * 255)))
+      return v.toString(16).padStart(2, '0')
+    }).join('')
+    return {
+      renderer: this._renderMode,
+      theme: this.theme,
+      colors: this.colors.map(rgbToHex),
+      colorOpacities: [...this.colorOpacities],
+      ...this.params,
+      splitFill: this.splitFill,
+      glass: this.glass,
+      liquidMetal: this.liquidMetal,
+      bloom: this.bloom,
+      lumen: this.lumen,
+      twist: this.twist,
+    }
+  }
+
+  // Apply a config object at runtime. Mirrors what the constructor does with
+  // options, so the playground "Copy JSON" output drops in live.
+  setConfig(config) {
+    if (!config || typeof config !== 'object') return
+    Object.keys(DEFAULTS).forEach(k => {
+      if (config[k] !== undefined) this.params[k] = config[k]
+    })
+    if (Array.isArray(config.colorOpacities)) this.colorOpacities = [...config.colorOpacities]
+    if (config.splitFill !== undefined) this.splitFill = !!config.splitFill
+    if (config.lumen !== undefined) this.lumen = !!config.lumen
+    if (config.twist !== undefined) this.twist = !!config.twist
+    // Glass / Liquid Metal / Bloom trigger shader recompiles on the GPU.
+    if (config.glass !== undefined) this.setGlass(!!config.glass)
+    if (config.liquidMetal !== undefined) this.setLiquidMetal(!!config.liquidMetal)
+    if (config.bloom !== undefined) this.setBloom(!!config.bloom)
+    if (Array.isArray(config.colors)) {
+      this.theme = config.theme || 'custom'
+      this.setColors(config.colors)
+    } else if (config.theme && COLOR_THEMES[config.theme]) {
+      this.setTheme(config.theme)
+    }
+    if (config.renderer && config.renderer !== this._renderMode) {
+      this.setRenderMode(config.renderer)
+    }
+  }
 
   _syncRendererFeatures() {
     if (this.renderer && this.renderer.setFeatures) {

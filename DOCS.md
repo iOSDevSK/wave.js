@@ -277,6 +277,13 @@ new WaveBackground(container, options?)
 | `glass` | `boolean` | `false` | Glass effect (WebGL only) |
 | `liquidMetal` | `boolean` | `false` | Liquid metal effect (WebGL only) |
 | `lmLiquid` | `number` | `0.07` | Liquid metal flow intensity (0–0.2) |
+| `bloom` | `boolean` | `false` | HDR bloom post-processing (WebGL only) |
+| `bloomThreshold` | `number` | `0.6` | Luminance threshold for bloom (0–1) |
+| `bloomIntensity` | `number` | `1.4` | Bloom halo strength (0–3) |
+| `lumen` | `boolean` | `false` | Glowing-ribbon render mode (WebGL only) |
+| `twist` | `boolean` | `false` | 3D chrome/glass twisted-ribbon effect (WebGL only) |
+| `twistAmount` | `number` | `1` | Twist intensity (0–1) |
+| `colors` | `string[]` | — | Explicit 4-hex-color array. Overrides `theme`. |
 | `colorOpacities` | `number[]` | `[1,1,1,1]` | Per-color opacity |
 | `pixelRatio` | `number` | `1` | Canvas pixel ratio cap. Higher values = sharper on retina but 4× GPU cost at 2×. Soft wave content looks identical at 1. |
 | `maxFPS` | `number` | `60` | FPS throttle. Set `0` to uncap. Default 60 avoids doubled GPU work on 120Hz ProMotion displays. |
@@ -293,8 +300,13 @@ new WaveBackground(container, options?)
 | `setSplitFill(bool)` | Toggle split fill mode |
 | `setGlass(bool)` | Toggle glass effect |
 | `setLiquidMetal(bool)` | Toggle liquid metal effect |
+| `setBloom(bool)` | Toggle bloom post-processing |
+| `setLumen(bool)` | Toggle Lumen (glowing ribbons) render mode |
+| `setTwist(bool)` | Toggle Twist (3D rotating ribbon) effect |
 | `setPixelRatio(ratio)` | Change canvas pixel ratio and resize. Useful for trading sharpness for GPU. |
 | `setMaxFPS(fps)` | Change FPS cap at runtime. Pass `0` to uncap. |
+| `toJSON()` | Return current settings as a plain object. Feed it back into the constructor or `setConfig()` to reproduce. |
+| `setConfig(obj)` | Apply a settings object at runtime. Same shape as the constructor options. |
 | `destroy()` | Stop animation, remove canvas, cleanup listeners |
 
 ### Properties
@@ -435,6 +447,82 @@ Smooth 3D chrome effect with:
 - Iridescent color tinting from wave hue
 - Specular and Fresnel highlights
 - Adjustable via `lmLiquid` parameter (0–0.2)
+
+---
+
+## JSON Config
+
+Every option the constructor accepts is a plain-JSON-serializable value, so you
+can tune the background in the playground at [wavejs.org](https://wavejs.org)
+and drop the resulting JSON straight into your app.
+
+### Export a config
+
+1. Open the **Parameters** panel (desktop: top-right; mobile: below the hero).
+2. Click the **Copy JSON** button (top of the panel, next to Reset).
+3. Paste the clipboard contents into a `config.json` file in your project.
+
+The same shape is also emitted by the runtime API:
+
+```js
+const json = wave.toJSON()
+// → { renderer: 'webgl2', colors: ['#07070f', ...], waveCount: 4, twist: true, ... }
+```
+
+### Load a config
+
+The JSON shape matches the constructor options 1-to-1. No mapping layer:
+
+```js
+// vanilla
+const config = await fetch('/config.json').then(r => r.json())
+const wave = new WaveBackground('#hero', config)
+```
+
+```jsx
+// React (Vite / webpack import-assertion or JSON loader)
+import config from './config.json'
+import { WaveBackground } from '@redesigner/wave.js'
+import { useEffect, useRef } from 'react'
+
+export default function AppFromJson() {
+  const ref = useRef(null)
+  useEffect(() => {
+    const wave = new WaveBackground(ref.current, config)
+    return () => wave.destroy()
+  }, [])
+  return <div ref={ref} style={{ width: '100%', height: '100vh' }} />
+}
+```
+
+### Swap configs at runtime
+
+Apply a new JSON to an existing instance without remounting:
+
+```js
+wave.setConfig(anotherConfig)
+```
+
+The method flips renderer, theme/colors, params, and every toggle to match
+the passed object. Missing keys are left unchanged.
+
+### Example config files
+
+- [`examples/vanilla/config.json`](examples/vanilla/config.json) — Lumen preset (glowing ribbons + bloom)
+- [`examples/vanilla/from-json.html`](examples/vanilla/from-json.html) — Vanilla JS loader
+- [`examples/react/src/config.json`](examples/react/src/config.json) — Twist preset (3D chrome ribbon)
+- [`examples/react/src/AppFromJson.jsx`](examples/react/src/AppFromJson.jsx) — React loader
+
+### JSON vs. inline options
+
+Both approaches drive the same underlying instance — pick whichever feels
+natural:
+
+| | Inline options | JSON config |
+|---|---|---|
+| Setup | Hand-write the options object in code | Tune in playground, export once |
+| Dynamic tweaks | Change in source, redeploy | Ship a new `config.json`, no code change |
+| Good for | Known, fixed settings | Designer-driven or A/B-tested looks |
 
 ---
 

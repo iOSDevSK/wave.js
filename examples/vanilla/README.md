@@ -79,6 +79,14 @@ The first argument is a CSS selector string or DOM element. The second is an opt
 | `glass` | `boolean` | `false` | Glass effect (WebGL only) |
 | `liquidMetal` | `boolean` | `false` | Liquid metal effect (WebGL only) |
 | `lmLiquid` | `number` | `0.07` | Liquid metal intensity (0–0.2) |
+| `bloom` | `boolean` | `false` | HDR bloom post-processing (WebGL only) |
+| `bloomThreshold` | `number` | `0.6` | Luminance threshold above which bloom kicks in (0–1) |
+| `bloomIntensity` | `number` | `1.4` | Bloom halo strength (0–3) |
+| `lumen` | `boolean` | `false` | Glowing-ribbon render mode (WebGL only) |
+| `twist` | `boolean` | `false` | 3D chrome/glass twisted-ribbon effect (WebGL only) |
+| `twistAmount` | `number` | `1` | Twist intensity (0–1) |
+| `colors` | `string[]` | — | 4 hex colors. Overrides `theme`. |
+| `colorOpacities` | `number[]` | `[1,1,1,1]` | Per-slot alpha |
 
 ### 5. Runtime API
 
@@ -143,13 +151,34 @@ When no `theme` is specified, the library auto-selects based on the user's local
 
 Re-checks every 60 seconds. Manually selecting a theme disables auto-selection.
 
+## Loading settings from JSON
+
+Instead of hand-coding the options, you can load a whole configuration from a
+JSON file. The JSON shape matches the constructor options 1-to-1, so no mapping
+is needed:
+
+```html
+<script type="module">
+  import { WaveBackground } from '@redesigner/wave.js'
+
+  const config = await fetch('./config.json').then(r => r.json())
+  const wave = new WaveBackground('#hero', config)
+</script>
+```
+
+See `from-json.html` + `config.json` in this folder. Export your own JSON from
+the playground at [wavejs.org](https://wavejs.org) — click the **Copy JSON**
+button in the Parameters panel — or via `wave.toJSON()` at runtime.
+
 ## File structure
 
 ```
-test/vanilla/
-  index.html      — Single HTML file with inline module script
-  package.json    — Only dependency: @redesigner/wave.js
-  README.md       — This file
+examples/vanilla/
+  index.html        — Inline-options usage (no JSON)
+  from-json.html    — Loads settings from `config.json` at runtime
+  config.json       — Example exported settings (Lumen preset)
+  package.json      — Only dependency: @redesigner/wave.js
+  README.md         — This file
 ```
 
 ## Browser support

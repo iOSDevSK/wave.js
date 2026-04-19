@@ -152,6 +152,13 @@ Creates an animated wave background in the given container.
 | `glass` | `false` | Glass transparency effect (WebGL only) |
 | `liquidMetal` | `false` | Chrome/metal effect (WebGL only) |
 | `lmLiquid` | `0.07` | Liquid Metal flow intensity (0–0.2) |
+| `bloom` | `false` | HDR bloom post-processing (WebGL only) |
+| `bloomThreshold` | `0.6` | Luminance above which bloom kicks in (0–1) |
+| `bloomIntensity` | `1.4` | Bloom halo strength (0–3) |
+| `lumen` | `false` | Glowing-ribbon render mode (WebGL only) |
+| `twist` | `false` | 3D chrome/glass twisted-ribbon effect (WebGL only) |
+| `twistAmount` | `1` | Twist intensity (0–1) |
+| `colors` | — | Explicit 4-hex-color array. Overrides `theme`. |
 | `colorOpacities` | `[1,1,1,1]` | Per-color opacity array |
 
 ### Methods
@@ -166,6 +173,11 @@ Creates an animated wave background in the given container.
 | `setSplitFill(bool)` | Toggle split fill mode |
 | `setGlass(bool)` | Toggle glass effect |
 | `setLiquidMetal(bool)` | Toggle liquid metal effect |
+| `setBloom(bool)` | Toggle HDR bloom post-processing |
+| `setLumen(bool)` | Toggle glowing-ribbon render mode |
+| `setTwist(bool)` | Toggle 3D chrome twist effect |
+| `toJSON()` | Return current settings as a plain object (round-trips through `new WaveBackground(el, json)`) |
+| `setConfig(obj)` | Apply a settings object at runtime — mirror of what the constructor accepts |
 | `destroy()` | Stop animation, remove canvas, cleanup all event listeners |
 
 ### Properties
@@ -221,6 +233,49 @@ new WaveBackground('#hero', { theme: 'sunset' })
 ```
 
 If the user manually selects a theme via the control panel, auto-detection is disabled until reset.
+
+## JSON config
+
+Everything you tune in the playground at [wavejs.org](https://wavejs.org) is just
+options — and the constructor accepts them all. Two flows:
+
+**A. Inline options (no JSON):**
+
+```js
+new WaveBackground('#hero', {
+  theme: 'sunset', waveCount: 12, bloom: true, twist: true,
+})
+```
+
+**B. Export + load JSON.** Tweak the playground to taste, click **Copy JSON**
+in the Parameters panel, paste into a `config.json`, and load at runtime:
+
+```js
+// vanilla
+const config = await fetch('/config.json').then(r => r.json())
+const wave = new WaveBackground('#hero', config)
+```
+
+```jsx
+// React
+import config from './config.json'
+const wave = new WaveBackground(el, config)
+```
+
+The JSON shape matches the options 1-to-1 — no mapping layer:
+
+```json
+{
+  "renderer": "webgl2",
+  "colors": ["#07070f", "#3730a3", "#06b6d4", "#34d399"],
+  "colorOpacities": [1, 1, 1, 1],
+  "waveCount": 4, "speed": 0.3, "amplitude": 0.08, "frequency": 2,
+  "thickness": 50, "blur": 6, "opacity": 1,
+  "bloom": false, "twist": true, "twistAmount": 1
+}
+```
+
+Round-trip at runtime: `wave.toJSON()` returns the current settings; `wave.setConfig(obj)` applies one. See `examples/vanilla/from-json.html` and `examples/react/src/AppFromJson.jsx` for working samples.
 
 ## Browser Support
 

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowRight, Copy, Check, ShieldCheck, Gauge, FileZip, Package, CaretDown, Faders, ArrowCounterClockwise, CaretUp } from '@phosphor-icons/react'
+import { ArrowRight, Copy, Check, ShieldCheck, Gauge, FileZip, Package, CaretDown, Faders, ArrowCounterClockwise, CaretUp, BracketsCurly } from '@phosphor-icons/react'
 import { WaveBackground } from '@redesigner/wave.js'
 import PRESETS from '../presets'
 
@@ -311,16 +311,30 @@ export default function Hero({ activePreset, onPresetApplied }) {
   const [renderMode, setRenderMode] = useState(DEFAULT_PRESET.renderer)
   const [panelOpen, setPanelOpen] = useState(true)
   const [panelNeedsScroll, setPanelNeedsScroll] = useState(false)
+  const [panelAtTop, setPanelAtTop] = useState(true)
+  const [panelAtBottom, setPanelAtBottom] = useState(false)
+  const [jsonCopied, setJsonCopied] = useState(false)
 
   useEffect(() => {
+    const el = document.getElementById('params-desktop')
+    if (!el) return
     const check = () => {
-      const el = document.getElementById('params-desktop')
-      if (el) setPanelNeedsScroll(el.scrollHeight > el.clientHeight)
+      const overflows = el.scrollHeight > el.clientHeight + 1
+      setPanelNeedsScroll(overflows)
+      setPanelAtTop(el.scrollTop <= 1)
+      setPanelAtBottom(el.scrollTop + el.clientHeight >= el.scrollHeight - 1)
     }
     check()
+    el.addEventListener('scroll', check, { passive: true })
     window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [panelOpen])
+    // Re-check a frame later — layout may not be final on first pass
+    const raf = requestAnimationFrame(check)
+    return () => {
+      el.removeEventListener('scroll', check)
+      window.removeEventListener('resize', check)
+      cancelAnimationFrame(raf)
+    }
+  }, [panelOpen, params, splitFill, glass, liquidMetal, bloom, lumen, twist])
 
   const colors = currentTheme === 'custom' && customColors
     ? customColors
@@ -529,6 +543,29 @@ export default function Hero({ activePreset, onPresetApplied }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  // Build a settings JSON matching the WaveBackground constructor options,
+  // so users can paste it straight into `new WaveBackground(el, CONFIG)`.
+  // Keys follow the same shape that `WaveBackground.toJSON()` emits.
+  const buildConfigJson = () => {
+    const activeColors = colors
+    return {
+      renderer: renderMode,
+      theme: currentTheme,
+      colors: activeColors,
+      colorOpacities: [...colorOpacities],
+      ...params,
+      splitFill, glass, liquidMetal, bloom, lumen, twist,
+    }
+  }
+
+  const handleCopyJson = () => {
+    const cfg = buildConfigJson()
+    const text = JSON.stringify(cfg, null, 2)
+    navigator.clipboard.writeText(text)
+    setJsonCopied(true)
+    setTimeout(() => setJsonCopied(false), 2000)
+  }
+
   // --- Renderer capability map ---
   // Which param keys + toggles each renderer actually consumes. Anything not
   // here is dimmed/disabled so the user can't futilely drag a slider that
@@ -648,23 +685,31 @@ export default function Hero({ activePreset, onPresetApplied }) {
 
       {/* Desktop: Parameters Panel — absolute to section (min-h-screen), centered */}
       <div className="absolute right-[max(1.5rem,calc((100%-80rem)/2+1.5rem))] hidden xl:flex z-20 items-center gap-3" style={{ top: '5rem', maxHeight: 'calc(100vh - 6rem)' }}>
-        {/* Scroll arrows — only when panel needs scroll */}
-        {panelNeedsScroll && (
-        <div className="flex flex-col gap-2">
+        {/* Scroll arrows — always visible on XL+; dimmed when at end of scroll. */}
+        <div className={`flex flex-col gap-2 transition-opacity duration-200 ${panelOpen && panelNeedsScroll ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <button
-            onClick={() => { const el = document.getElementById('params-desktop'); if (el) el.scrollTo({ top: 0, behavior: 'smooth' }) }}
-            className="w-8 h-8 rounded-full border border-white/15 flex items-center justify-center text-white/30 hover:text-white/70 hover:border-white/30 transition-all"
+            onClick={() => { const el = document.getElementById('params-desktop'); if (el) el.scrollBy({ top: -el.clientHeight * 0.6, behavior: 'smooth' }) }}
+            disabled={panelAtTop}
+            title="Scroll up"
+            className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all
+              ${panelAtTop
+                ? 'border-white/5 text-white/15 cursor-not-allowed'
+                : 'border-white/15 text-white/40 hover:text-white/90 hover:border-white/40'}`}
           >
             <CaretUp size={14} />
           </button>
           <button
-            onClick={() => { const el = document.getElementById('params-desktop'); if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }) }}
-            className="w-8 h-8 rounded-full border border-white/15 flex items-center justify-center text-white/30 hover:text-white/70 hover:border-white/30 transition-all"
+            onClick={() => { const el = document.getElementById('params-desktop'); if (el) el.scrollBy({ top: el.clientHeight * 0.6, behavior: 'smooth' }) }}
+            disabled={panelAtBottom}
+            title="Scroll down"
+            className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all
+              ${panelAtBottom
+                ? 'border-white/5 text-white/15 cursor-not-allowed'
+                : 'border-white/15 text-white/40 hover:text-white/90 hover:border-white/40'}`}
           >
             <CaretDown size={14} />
           </button>
         </div>
-        )}
         {/* Panel */}
         <div id="params-desktop" className="hide-scrollbar" style={{ width: 'min(19.5vw, 300px)', maxHeight: 'calc(100vh - 6rem)', overflowY: 'auto' }}>
           {renderPanel(false)}
@@ -697,6 +742,14 @@ export default function Hero({ activePreset, onPresetApplied }) {
             <Faders size={16} className="text-teal" /> Parameters
           </h3>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleCopyJson}
+              className={`text-[10px] font-mono transition-colors flex items-center gap-1 whitespace-nowrap ${jsonCopied ? 'text-teal' : 'text-zinc-500 hover:text-teal'}`}
+              title="Copy current settings as JSON"
+            >
+              {jsonCopied ? <Check size={12} /> : <BracketsCurly size={12} />}
+              {jsonCopied ? 'Copied' : 'JSON'}
+            </button>
             <button onClick={resetDefaults} className="text-[10px] font-mono text-zinc-500 hover:text-teal transition-colors flex items-center gap-1" title="Reset to defaults">
               <ArrowCounterClockwise size={12} /> Reset
             </button>
