@@ -159,14 +159,25 @@ vec3 lumenRender(vec2 uv, float aspect, float t) {
     colA       = mix(colA, u_colorOpacity4, b);
 
     // Three-layer additive composite:
-    //   haze (wide, low)   -> atmospheric color mist
-    //   body (mid, colored)-> visible ribbon band
-    //   core (thin, bright)-> razor specular + bloom source
-    // u_lumenIntensity scales all three uniformly — dims ribbons or
-    // pumps the core past HDR (1.0) to drive a stronger bloom halo.
-    col += hue * haze * u_opacity * colA * 0.10 * u_lumenIntensity;
-    col += hue * body * u_opacity * colA * 0.95 * u_lumenIntensity;
-    col += mix(hue, vec3(1.0), 0.08) * core * u_opacity * 1.4 * u_lumenIntensity;
+    //   haze (wide, low)   -> atmospheric color mist (NOT scaled by intensity)
+    //   body (mid, colored)-> visible ribbon band     (linear intensity)
+    //   core (thin, bright)-> razor specular + bloom source (super-linear)
+    //
+    // u_opacity is the overall alpha knob — dims all three uniformly.
+    // u_lumenIntensity is semantically different: it shifts the mix
+    // between atmospheric haze and punchy hot core without touching
+    // the haze floor.
+    //   intensity = 0 -> only haze visible (soft misty ribbons, no bloom)
+    //   intensity = 1 -> baseline Lumen look
+    //   intensity = 2 -> core pumped past HDR, dramatic bloom halo
+    //
+    // Core uses pow(.., 1.5) so its scaling outpaces the body — at
+    // intensity > 1 the bloom halo grows faster than the ribbon body.
+    float bodyK = u_lumenIntensity;
+    float coreK = pow(max(u_lumenIntensity, 0.0), 1.5);
+    col += hue * haze * u_opacity * colA * 0.10;
+    col += hue * body * u_opacity * colA * 0.95 * bodyK;
+    col += mix(hue, vec3(1.0), 0.08) * core * u_opacity * 1.4 * coreK;
   }
 
   return col;
