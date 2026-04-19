@@ -30,6 +30,9 @@ uniform float u_thicknessRandom;
 uniform float u_verticalOffset;
 uniform float u_rotation;
 uniform float u_splitFill;
+uniform float u_lumen;
+uniform float u_twist;
+uniform float u_twistAmount;
 #ifdef HAS_GLASS
 uniform float u_glass;
 #endif
@@ -40,11 +43,10 @@ uniform float u_lmLiquid;
 
 varying vec2 v_uv;
 
-#ifdef HAS_LIQUID_METAL
-// Simplex noise (from MetalFlow / Ashima Arts)
-vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-vec3 permute(vec3 x) { return mod289(((x * 34.0) + 1.0) * x); }
+// --- Simplex 2D noise (Ashima) — always compiled: used by liquid-metal AND lumen.
+vec3 snoise_mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec2 snoise_mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec3 snoise_permute(vec3 x) { return snoise_mod289(((x * 34.0) + 1.0) * x); }
 
 float snoise(vec2 v) {
   const vec4 C = vec4(0.211324865405187, 0.366025403784439,
@@ -54,8 +56,8 @@ float snoise(vec2 v) {
   vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
   vec4 x12 = x0.xyxy + C.xxzz;
   x12.xy -= i1;
-  i = mod289(i);
-  vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0))
+  i = snoise_mod289(i);
+  vec3 p = snoise_permute(snoise_permute(i.y + vec3(0.0, i1.y, 1.0))
            + i.x + vec3(0.0, i1.x, 1.0));
   vec3 m = max(0.5 - vec3(dot(x0, x0), dot(x12.xy, x12.xy),
                dot(x12.zw, x12.zw)), 0.0);
@@ -71,7 +73,101 @@ float snoise(vec2 v) {
   g.yz = a0.yz * x12.xz + h.yz * x12.yw;
   return 130.0 * dot(m, g);
 }
-#endif
+
+// ========================================================================
+// LUMEN PATH
+// Separate render model: HDR glowing ribbons on black background.
+//  - each ribbon = domain-warped sine centerline
+//  - body  = colored Gaussian falloff   (feeds soft bloom halo)
+//  - core  = razor-thin white Gaussian > 1.0 luminance (feeds hot specular)
+//  - color drifts along ribbon arclength in time
+//  - composition is ADDITIVE so overlapping ribbons brighten, not occlude
+// ========================================================================
+vec3 lumenRender(vec2 uv, float aspect, float t) {
+  vec3 col = u_color1;                 // black background
+  int wc = int(u_waveCount);
+
+  // Two-tier width: body is the soft glow, core is a 1-2px specular streak.
+  float bodyW = clamp(u_blur * 0.0009 + 0.022, 0.022, 0.18);
+  float coreW = clamp(u_thickness * 0.0007 + 0.0012, 0.0012, 0.018);
+
+  // Ribbon vertical spread — concentration packs them toward center.
+  float spread = 0.82 / (1.0 + u_concentration * 0.15);
+
+  // Shared slow curl field — all ribbons respond to the same "wind".
+  vec2 wuv = vec2(uv.x * aspect, uv.y);
+  float sharedWarp = snoise(vec2(wuv.x * 0.6, wuv.y * 1.0 + t * 0.20)) * 0.03;
+
+  for (int i = 0; i < 12; i++) {
+    if (i >= wc) break;
+    float fi = float(i);
+    float k  = (fi + 0.5) / max(float(wc), 1.0);   // 0..1 per ribbon
+    float phase = fi * 2.17 + u_seed;
+
+    // Per-ribbon jitters
+    float jitter  = fract(sin(fi * 43.7 + u_seed * 17.3) * 43758.5453) - 0.5;
+    float jitter2 = fract(sin(fi * 91.3 + u_seed *  9.1) * 43758.5453);
+
+    // Dual-frequency warp: slow curl + fast twist, so ribbons braid + wobble.
+    float nLo = snoise(vec2(wuv.x * 0.8 + phase,       wuv.y * 1.3 + t * 0.16));
+    float nHi = snoise(vec2(wuv.x * 2.6 + phase + 3.1, wuv.y * 3.0 + t * 0.11));
+    float nX  = snoise(vec2(wuv.x * 1.5 + phase + 7.1, wuv.y * 1.8 - t * 0.13));
+
+    vec2 w = wuv;
+    w.y += nLo * 0.04 + nHi * 0.015 + sharedWarp;
+    w.x += nX * 0.10;
+
+    // Mouse pull (subtle)
+    float mouseInfluence = (u_mouse.x - 0.5) * 0.05;
+    w.y += mouseInfluence * sin(w.x * 1.3 + fi);
+
+    // Ribbon centerline: per-ribbon amplitude & frequency variety.
+    float baseY = 0.5 + u_verticalOffset + (k - 0.5) * spread;
+    float amp   = u_amplitude * (0.7 + 0.6 * jitter2) * (1.0 - u_randomness * 0.3 + u_randomness * jitter);
+    float freq  = u_frequency * (0.75 + 0.6 * jitter2);
+    float cy = baseY
+             + sin(w.x * freq       + t * u_speed       + phase      ) * amp
+             + sin(w.x * freq * 2.1 - t * u_speed * 0.7 + phase * 1.7) * amp * 0.45
+             + sin(w.x * freq * 0.5 + t * u_speed * 0.3 + phase * 2.9) * amp * 0.6;
+
+    float d = abs(w.y - cy);
+
+    // Per-ribbon width variation
+    float thickJit = fract(sin(fi * 253.3 + u_seed * 197.1) * 43758.5453);
+    float bw = bodyW * (1.0 - u_thicknessRandom * 0.5 + u_thicknessRandom * thickJit);
+    float cw = coreW * (1.0 - u_thicknessRandom * 0.3 + u_thicknessRandom * thickJit);
+
+    float body = exp(-(d * d) / (bw * bw));
+    float core = exp(-(d * d) / (cw * cw));
+    // Soft wide haze — atmospheric color mist that reads at large distance.
+    float hw   = bw * 2.8;
+    float haze = exp(-(d * d) / (hw * hw));
+
+    // Arclength color drift — full 3-color palette, high cycle frequency
+    // so a single ribbon visibly reads as color2 → color3 → color4 along X.
+    // Per-ribbon phase offset (fi * 2.3) keeps the 3 ribbons chromatically
+    // offset instead of synchronously changing.
+    float s = w.x * 3.6 + t * 0.55 + fi * 2.3 + nLo * 2.5;
+    float a = 0.5 + 0.5 * sin(s);
+    float b = 0.5 + 0.5 * sin(s * 0.61 + 1.9 + fi);
+    vec3 hue = mix(u_color2, u_color3, a);
+    hue      = mix(hue,      u_color4, b);
+
+    // Per-color opacity modulation
+    float colA = mix(u_colorOpacity2, u_colorOpacity3, a);
+    colA       = mix(colA, u_colorOpacity4, b);
+
+    // Three-layer additive composite:
+    //   haze (wide, low)   -> atmospheric color mist
+    //   body (mid, colored)-> visible ribbon band
+    //   core (thin, bright)-> razor specular + bloom source
+    col += hue * haze * u_opacity * colA * 0.10;
+    col += hue * body * u_opacity * colA * 0.95;
+    col += mix(hue, vec3(1.0), 0.08) * core * u_opacity * 1.4;
+  }
+
+  return col;
+}
 
 void main() {
   vec2 uv = v_uv;
@@ -89,6 +185,16 @@ void main() {
   }
 
   float t = u_time * u_speed;
+
+  // --- Lumen takes over the whole pipeline when enabled ---
+  if (u_lumen > 0.5) {
+    vec3 col = lumenRender(uv, aspect, u_time);
+    // Film grain
+    float gn = fract(sin(dot(gl_FragCoord.xy * 0.01, vec2(12.9898, 78.233))) * 43758.5453);
+    col += (gn - 0.5) * 0.012;
+    gl_FragColor = vec4(col, 1.0);
+    return;
+  }
 
   // Mouse influence
   float mouseInfluence = (u_mouse.x - 0.5) * 0.08;
@@ -127,23 +233,45 @@ void main() {
 
     float waveY = baseY + wave;
 
+    // --- TWIST: render each wave as a flat ribbon rotating around its own
+    // horizontal axis. tphase = rotation angle along X. cT = face-on-ness
+    // (1 flat towards us, 0 edge-on, -1 flipped). sT controls where the
+    // chrome specular streak sits across the ribbon width.
+    float cT = 1.0;
+    float sT = 0.0;
+    if (u_twist > 0.5) {
+      float tphase = uv.x * aspect * u_frequency * 1.2
+                   + t * 0.6 + u_seed * 0.3 + fi * 0.6;
+      cT = cos(tphase);
+      sT = sin(tphase);
+    }
+
     // Per-wave thickness: thicknessRandom scales each wave differently
     float thickRand = fract(sin(fi * 253.3 + u_seed * 197.1) * 43758.5453);
     float thickUV = u_thickness / u_resolution.y;
     float blurUV = u_blur / u_resolution.y;
     float thick = thickUV * (1.0 - u_thicknessRandom + u_thicknessRandom * thickRand);
+    // Twist widens the ribbon body so the rotation is readable, then narrows
+    // toward zero when viewed edge-on.
+    float thickTwist = thick * (1.5 + u_twistAmount * 1.5) * abs(cT);
+    float thickUsed  = mix(thick, max(thickTwist, thick * 0.05), step(0.5, u_twist) * u_twistAmount);
 
     // Edge calculation
     // thick = solid core half-width, blur = soft fade width on edges
     float edge;
-    if (u_splitFill > 0.5) {
-      // Split fill: solid above (waveY - thick), blur zone below that
-      edge = smoothstep(waveY - thick - blurUV, waveY - thick, uv.y);
-    } else {
-      // Symmetric band: solid core of 'thick', then blur fade
+    if (u_twist > 0.5) {
+      // Symmetric ribbon band (split fill is ignored in twist mode — the
+      // ribbon IS the visual, not a gradient fill).
       float dist = abs(uv.y - waveY);
-      edge = 1.0 - smoothstep(thick, thick + blurUV, dist);
+      edge = 1.0 - smoothstep(thickUsed, thickUsed + blurUV, dist);
+    } else if (u_splitFill > 0.5) {
+      edge = smoothstep(waveY - thickUsed - blurUV, waveY - thickUsed, uv.y);
+    } else {
+      float dist = abs(uv.y - waveY);
+      edge = 1.0 - smoothstep(thickUsed, thickUsed + blurUV, dist);
     }
+    // Override 'thick' name to keep downstream glass/lm code consistent.
+    thick = thickUsed;
 
     // Per-wave opacity — back waves more transparent, front more opaque
     float layerAlpha = u_opacity * (0.25 + 0.75 * (fi / max(float(waveCount) - 1.0, 1.0)));
@@ -170,6 +298,45 @@ void main() {
     // Subtle brightness shimmer along wave
     float brightness = 0.95 + 0.1 * sin(uv.x * aspect * 3.0 + t * 0.5 + fi);
     waveColor *= brightness;
+
+    // Twist: turn the wave into a chrome/glass ribbon with a specular streak
+    // that sweeps across its width as it rotates, rim highlight at the
+    // silhouette edges, and a dark "glass" back face.
+    if (u_twist > 0.5) {
+      // Normalized cross-ribbon position (-1 top edge, +1 bottom edge).
+      float yRel = clamp((uv.y - waveY) / max(thick, 1e-5), -1.0, 1.0);
+      float faceT = smoothstep(-0.15, 0.15, cT);   // 0=back, 1=front
+
+      // Front face: mid-tone palette base so the specular pops.
+      // Back face: deep shadowed "glass" tint.
+      vec3 frontBase = waveColor * 0.80;
+      vec3 backBase  = waveColor * 0.10;
+      vec3 base = mix(backBase, frontBase, faceT);
+
+      // Chrome specular streak: a bright Gaussian centered where the ribbon's
+      // face normal points at the viewer. As sT changes along X, the streak
+      // slides across the ribbon width — this sells the 3D rotation.
+      float specPos = yRel + sT * 0.9;
+      float spec = exp(-specPos * specPos * 7.0) * faceT;
+      vec3 specCol = vec3(2.2) * spec;
+
+      // Secondary tight core highlight
+      float spec2Pos = yRel + sT * 0.6;
+      float spec2 = exp(-spec2Pos * spec2Pos * 40.0) * faceT;
+      specCol += vec3(2.5, 2.4, 2.6) * spec2;
+
+      // Rim at silhouette — strongest near edge-on (|cT| small) AND near
+      // ribbon edges (|yRel| near 1). Iridescent warm-to-cool shift.
+      float rimBand = pow(clamp(abs(yRel) - 0.55, 0.0, 1.0) / 0.45, 1.5);
+      float rimFace = pow(1.0 - abs(cT), 1.6);
+      float rim = rimBand * rimFace;
+      vec3 rimCol = mix(vec3(1.0, 0.78, 0.5), vec3(0.6, 0.7, 1.0),
+                        0.5 + 0.5 * sin(uv.x * aspect * u_frequency + t + fi));
+      vec3 rimAdd = rimCol * rim * 1.3;
+
+      vec3 twistedColor = base + specCol + rimAdd;
+      waveColor = mix(waveColor, twistedColor, u_twistAmount);
+    }
 
 #ifdef HAS_GLASS
     // Glass effect: transparency, refraction, caustic highlights, soft edges

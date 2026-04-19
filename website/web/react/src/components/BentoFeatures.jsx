@@ -36,7 +36,7 @@ export default function BentoFeatures() {
               <h3 className="text-lg font-bold text-white mt-4">Micro Footprint</h3>
             </div>
             <p className="text-zinc-400 text-sm mt-4 leading-relaxed">
-              ~7kb gzipped, zero dependencies. Tree-shakeable exports mean you only bundle what you render.
+              ~11kb gzipped, zero dependencies. Tree-shakeable exports mean you only bundle what you render.
             </p>
           </div>
         </div>

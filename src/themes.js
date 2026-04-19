@@ -5,6 +5,10 @@ export const COLOR_THEMES = {
   'dusk':     ['#1a0533', '#7b2ff7', '#c77dff', '#e0aaff'],
   'sunset':   ['#1a0033', '#f394ff', '#ff6b6b', '#fca311'],
   'night':    ['#0d0221', '#3d1a78', '#6b3fa0', '#9d4edd'],
+  // Lumen: flat black background + saturated ribbon palette. Designed to
+  // pair with `bloom` — the palette must be punchy since halos inherit hue.
+  //   bg          blue      magenta    red
+  'lumen':   ['#000000', '#3a7bff', '#ff2aa0', '#ff2d3d'],
 }
 
 export const DEFAULTS = {
@@ -21,6 +25,46 @@ export const DEFAULTS = {
   verticalOffset: 0,
   rotation: 0,
   lmLiquid: 0.07,
+  bloomThreshold: 0.6,
+  bloomIntensity: 1.4,
+  twistAmount: 1,
+}
+
+// One-click preset that reproduces the Lumen-style glowing ribbon.
+// Uses the dedicated `lumen: true` render path (HDR ribbons + hot cores
+// + domain warp + arclength color drift) together with bloom.
+//
+// Tuning:
+//  - waveCount 3: three distinct ribbons, not a dense stack
+//  - amplitude 0.14, frequency 0.95: slow flowing S-curves
+//  - blur 90: body Gaussian width; feeds the bright-pass
+//  - thickness 2: razor-thin white hot core
+//  - bloomThreshold 0.60: only the HDR cores bleed into halo
+//  - bloomIntensity 1.05: punchy volumetric glow
+export const LUMEN_PRESET = {
+  theme: 'lumen',
+  bloom: true,
+  lumen: true,
+  params: {
+    waveCount: 3,
+    speed: 0.5,
+    amplitude: 0.14,
+    frequency: 0.95,
+    opacity: 1.0,
+    thickness: 2,
+    blur: 90,
+    concentration: 0,
+    randomness: 0.5,
+    thicknessRandom: 0.25,
+    verticalOffset: 0,
+    rotation: 0,
+    bloomThreshold: 0.60,
+    bloomIntensity: 1.05,
+  },
+  colorOpacities: [1, 1, 1, 1],
+  splitFill: false,
+  glass: false,
+  liquidMetal: false,
 }
 
 export const SLIDER_DEFS = [
@@ -36,6 +80,12 @@ export const SLIDER_DEFS = [
   { key: 'thicknessRandom', label: 'Thickness Random', min: 0, max: 1, step: 0.01 },
   { key: 'verticalOffset', label: 'Vertical Offset', min: -0.5, max: 0.5, step: 0.01 },
   { key: 'rotation', label: 'Rotation (\u00B0)', min: 0, max: 360, step: 1 },
+]
+
+// Conditional sliders — only shown in the UI when their parent toggle is on.
+export const BLOOM_SLIDER_DEFS = [
+  { key: 'bloomThreshold', label: 'Bloom Threshold', min: 0, max: 1, step: 0.01 },
+  { key: 'bloomIntensity', label: 'Bloom Intensity', min: 0, max: 3, step: 0.01 },
 ]
 
 export function getTimeOfDay() {

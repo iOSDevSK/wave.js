@@ -13,7 +13,7 @@ GPU-accelerated animated sine wave backgrounds. Works with **vanilla JS** and **
 - 12 adjustable parameters (waves, speed, amplitude, frequency, opacity, thickness, blur, concentration, randomness, thickness randomness, vertical offset, rotation)
 - 6 built-in color themes with automatic time-of-day selection
 - Custom RGBA color picker with per-color opacity
-- Glass effect, Liquid Metal effect, Split Fill mode
+- Glass effect, Liquid Metal effect, Split Fill mode, Bloom, Lumen, Twist
 - Rotation (0–360°) around screen center
 - Mouse-reactive wave distortion
 - Smooth 1500ms color transitions between themes

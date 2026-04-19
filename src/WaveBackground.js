@@ -19,6 +19,9 @@ export default class WaveBackground {
     this.splitFill = options.splitFill || false
     this.glass = options.glass || false
     this.liquidMetal = options.liquidMetal || false
+    this.bloom = options.bloom || false
+    this.lumen = options.lumen || false
+    this.twist = options.twist || false
     this.mouse = { x: 0.5, y: 0.5 }
     this._mouseTarget = { x: 0.5, y: 0.5 }
     this.seed = Math.random() * 100
@@ -65,14 +68,26 @@ export default class WaveBackground {
   setSplitFill(v) { this.splitFill = v }
   setGlass(v) {
     this.glass = v
-    if (this.renderer && this.renderer.setFeatures) {
-      this.renderer.setFeatures({ glass: this.glass, liquidMetal: this.liquidMetal })
-    }
+    this._syncRendererFeatures()
   }
   setLiquidMetal(v) {
     this.liquidMetal = v
+    this._syncRendererFeatures()
+  }
+  setBloom(v) {
+    this.bloom = v
+    this._syncRendererFeatures()
+  }
+  setLumen(v) { this.lumen = v }
+  setTwist(v) { this.twist = v }
+
+  _syncRendererFeatures() {
     if (this.renderer && this.renderer.setFeatures) {
-      this.renderer.setFeatures({ glass: this.glass, liquidMetal: this.liquidMetal })
+      this.renderer.setFeatures({
+        glass: this.glass,
+        liquidMetal: this.liquidMetal,
+        bloom: this.bloom,
+      })
     }
   }
 
@@ -98,7 +113,11 @@ export default class WaveBackground {
       this._createCanvas()
       const gl = this.canvas.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' })
       if (gl) {
-        this.renderer = new WebGLRenderer(this.canvas, gl, { glass: this.glass, liquidMetal: this.liquidMetal })
+        this.renderer = new WebGLRenderer(this.canvas, gl, {
+          glass: this.glass,
+          liquidMetal: this.liquidMetal,
+          bloom: this.bloom,
+        })
         this._renderMode = mode
         this._resize()
         if (!this._raf) this._startLoop()
@@ -164,7 +183,11 @@ export default class WaveBackground {
     const gl = this.canvas.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' })
     if (gl) {
       try {
-        this.renderer = new WebGLRenderer(this.canvas, gl, { glass: this.glass, liquidMetal: this.liquidMetal })
+        this.renderer = new WebGLRenderer(this.canvas, gl, {
+          glass: this.glass,
+          liquidMetal: this.liquidMetal,
+          bloom: this.bloom,
+        })
         this._renderMode = 'webgl2'
         return
       } catch (e) {
@@ -299,6 +322,11 @@ export default class WaveBackground {
       splitFill: this.splitFill,
       glass: this.glass,
       liquidMetal: this.liquidMetal,
+      bloom: this.bloom,
+      lumen: this.lumen,
+      twist: this.twist,
+      bloomThreshold: this.params.bloomThreshold,
+      bloomIntensity: this.params.bloomIntensity,
     })
   }
 }

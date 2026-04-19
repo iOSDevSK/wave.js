@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.0 — 2026-04-19
+
+New **Twist** effect and default bloom tuning.
+
+### Added
+- **Twist effect.** Renders each wave as a flat chrome/glass ribbon rotating around its own horizontal axis. Width swells face-on and collapses edge-on, a specular streak sweeps across as the ribbon turns, rim highlight on the silhouette, dark "glass" back face.
+- `twist` option + `setTwist(v)` runtime method.
+- `twistAmount` param (0–1) — scales the effect intensity.
+
+### Changed
+- Default `bloomThreshold` lowered from `0.85` to `0.6` so bloom is visible on non-HDR (non-Lumen) scenes without slider tweaking.
+
+### Notes
+- Twist is WebGL2-only. Disabled in Lumen mode (the two effects drive the full render pipeline).
+
 ## 1.1.0 — 2026-04-18
 
 Major GPU performance overhaul. Default state drops from ~20 W to ~1–2 W GPU on Apple Silicon; 4–8× lower thermals in typical use.

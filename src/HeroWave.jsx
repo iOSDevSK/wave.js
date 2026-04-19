@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import WaveBackground from './WaveBackground.js'
-import { COLOR_THEMES, DEFAULTS, SLIDER_DEFS, getTimeOfDay, hexToHsv, hsvToHex } from './themes.js'
+import { COLOR_THEMES, DEFAULTS, SLIDER_DEFS, BLOOM_SLIDER_DEFS, LUMEN_PRESET, getTimeOfDay, hexToHsv, hsvToHex } from './themes.js'
 
 // --- Draggable bar helper ---
 function useBarDrag(onChange) {
@@ -169,6 +169,7 @@ export default function HeroWave({ theme: themeProp, className, style, children 
   const [splitFill, setSplitFill] = useState(false)
   const [glass, setGlass] = useState(false)
   const [liquidMetal, setLiquidMetal] = useState(false)
+  const [bloom, setBloom] = useState(false)
 
   const [renderMode, setRenderMode] = useState('auto')
 
@@ -210,8 +211,9 @@ export default function HeroWave({ theme: themeProp, className, style, children 
     w.setSplitFill(splitFill)
     w.setGlass(glass)
     w.setLiquidMetal(liquidMetal)
+    w.setBloom(bloom)
     w.setColorOpacities(colorOpacities)
-  }, [params, splitFill, glass, liquidMetal, colorOpacities])
+  }, [params, splitFill, glass, liquidMetal, bloom, colorOpacities])
 
   // Sync theme/colors
   useEffect(() => {
@@ -240,8 +242,25 @@ export default function HeroWave({ theme: themeProp, className, style, children 
     setSplitFill(false)
     setGlass(false)
     setLiquidMetal(false)
+    setBloom(false)
     userPickedTheme.current = false
     setCurrentTheme(getTimeOfDay())
+  }
+
+  // One-click Lumen preset: applies theme, params, and enables bloom in a
+  // single action. This matches the look in the reference video — without
+  // tuning ~7 sliders by hand.
+  const applyLumenPreset = () => {
+    const p = LUMEN_PRESET
+    userPickedTheme.current = true
+    setCurrentTheme(p.theme)
+    setCustomColors(null)
+    setParams({ ...DEFAULTS, ...p.params })
+    setColorOpacities([...p.colorOpacities])
+    setSplitFill(p.splitFill)
+    setGlass(p.glass)
+    setLiquidMetal(p.liquidMetal)
+    setBloom(p.bloom)
   }
 
   return (
@@ -288,7 +307,8 @@ export default function HeroWave({ theme: themeProp, className, style, children 
 
             {[{ label: 'Split Fill', value: splitFill, toggle: setSplitFill },
               { label: 'Glass', value: glass, toggle: setGlass },
-              { label: 'Liquid Metal', value: liquidMetal, toggle: setLiquidMetal }].map(({ label, value, toggle }) => (
+              { label: 'Liquid Metal', value: liquidMetal, toggle: setLiquidMetal },
+              { label: 'Bloom', value: bloom, toggle: setBloom }].map(({ label, value, toggle }) => (
               <label key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                 <div onClick={() => toggle(v => !v)} style={{ width: 18, height: 18, borderRadius: 4, border: '1.5px solid rgba(255,255,255,0.25)', background: value ? 'rgba(255,255,255,0.25)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {value && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
@@ -300,6 +320,14 @@ export default function HeroWave({ theme: themeProp, className, style, children 
             {liquidMetal && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingLeft: 8, borderLeft: '2px solid rgba(255,255,255,0.1)' }}>
                 <Slider label="Liquify" value={params.lmLiquid} min={0} max={0.2} step={0.001} onChange={v => setParam('lmLiquid', v)} />
+              </div>
+            )}
+
+            {bloom && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingLeft: 8, borderLeft: '2px solid rgba(255,255,255,0.1)' }}>
+                {BLOOM_SLIDER_DEFS.map(s => (
+                  <Slider key={s.key} label={s.label} value={params[s.key]} min={s.min} max={s.max} step={s.step} onChange={v => setParam(s.key, v)} />
+                ))}
               </div>
             )}
 
@@ -315,6 +343,13 @@ export default function HeroWave({ theme: themeProp, className, style, children 
                 <option value="css" style={{ background: '#222' }}>CSS Gradient (Static)</option>
                 <option value="none" style={{ background: '#222' }}>None (Solid Color)</option>
               </select>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 6 }}>Presets</div>
+              <button onClick={applyLumenPreset} style={{ width: '100%', padding: '7px 0', background: 'linear-gradient(90deg, rgba(255,40,85,0.25), rgba(102,168,255,0.25))', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 8, color: 'white', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
+                Lumen
+              </button>
             </div>
 
             <button onClick={resetDefaults} style={{ padding: '7px 0', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: 'rgba(255,255,255,0.7)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>

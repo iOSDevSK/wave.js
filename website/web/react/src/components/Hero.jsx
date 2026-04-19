@@ -35,6 +35,8 @@ const DEFAULTS = {
   opacity: 0.6, thickness: 1, blur: 30, concentration: 0,
   randomness: 0, thicknessRandom: 0, verticalOffset: 0, rotation: 0,
   lmLiquid: 0.07,
+  bloomThreshold: 0.85, bloomIntensity: 1.7,
+  twistAmount: 1,
 }
 
 const SLIDER_DEFS = [
@@ -231,16 +233,16 @@ function ColorSwatch({ color, opacity, onColorChange, onOpacityChange, panelRef 
 }
 
 // --- Slider with click-to-edit (styled with website CSS) ---
-function ParamSlider({ label, value, min, max, step, onChange }) {
+function ParamSlider({ label, value, min, max, step, onChange, disabled, disabledHint }) {
   const [editing, setEditing] = useState(false)
   const [editVal, setEditVal] = useState('')
   const decimals = step < 0.001 ? 4 : step < 0.01 ? 3 : step < 1 ? 2 : 0
 
   return (
-    <div>
+    <div className={disabled ? 'opacity-40 pointer-events-none select-none' : ''} title={disabled ? disabledHint : undefined}>
       <div className="flex justify-between items-end mb-1">
         <label className="text-[11px] font-medium text-white/80">{label}</label>
-        {editing ? (
+        {editing && !disabled ? (
           <input
             autoFocus type="number" min={min} max={max} step={step} value={editVal}
             onChange={e => setEditVal(e.target.value)}
@@ -250,29 +252,35 @@ function ParamSlider({ label, value, min, max, step, onChange }) {
           />
         ) : (
           <span
-            onClick={() => { setEditVal(decimals ? value.toFixed(decimals) : String(value)); setEditing(true) }}
+            onClick={() => { if (!disabled) { setEditVal(decimals ? value.toFixed(decimals) : String(value)); setEditing(true) } }}
             className="text-[11px] font-mono text-white/90 cursor-text border-b border-dashed border-white/30 hover:border-teal/50 transition-colors"
           >
             {decimals ? value.toFixed(decimals) : value}
           </span>
         )}
       </div>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(parseFloat(e.target.value))} />
+      <input type="range" min={min} max={max} step={step} value={value} disabled={disabled} onChange={e => onChange(parseFloat(e.target.value))} />
     </div>
   )
 }
 
 // --- Toggle checkbox ---
-function Toggle({ label, value, onToggle }) {
+function Toggle({ label, value, onToggle, disabled, disabledHint }) {
+  const boxCls = disabled
+    ? 'bg-transparent border-white/10'
+    : value
+      ? 'bg-teal/30 border-teal/60'
+      : 'bg-transparent border-white/25 group-hover:border-white/40'
   return (
-    <label className="flex items-center gap-2 cursor-pointer group">
+    <label
+      className={`flex items-center gap-2 group ${disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`}
+      title={disabled ? disabledHint : undefined}
+    >
       <div
-        onClick={() => onToggle(!value)}
-        className={`w-[18px] h-[18px] rounded border-[1.5px] flex items-center justify-center flex-shrink-0 transition-colors ${
-          value ? 'bg-teal/30 border-teal/60' : 'bg-transparent border-white/25 group-hover:border-white/40'
-        }`}
+        onClick={() => { if (!disabled) onToggle(!value) }}
+        className={`w-[18px] h-[18px] rounded border-[1.5px] flex items-center justify-center flex-shrink-0 transition-colors ${boxCls}`}
       >
-        {value && (
+        {value && !disabled && (
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
         )}
       </div>
@@ -297,6 +305,9 @@ export default function Hero({ activePreset, onPresetApplied }) {
   const [splitFill, setSplitFill] = useState(DEFAULT_PRESET.splitFill)
   const [glass, setGlass] = useState(DEFAULT_PRESET.glass)
   const [liquidMetal, setLiquidMetal] = useState(DEFAULT_PRESET.liquidMetal)
+  const [bloom, setBloom] = useState(false)
+  const [lumen, setLumen] = useState(false)
+  const [twist, setTwist] = useState(false)
   const [renderMode, setRenderMode] = useState(DEFAULT_PRESET.renderer)
   const [panelOpen, setPanelOpen] = useState(true)
   const [panelNeedsScroll, setPanelNeedsScroll] = useState(false)
@@ -333,6 +344,9 @@ export default function Hero({ activePreset, onPresetApplied }) {
       w.setSplitFill(p.splitFill)
       w.setGlass(p.glass)
       w.setLiquidMetal(p.liquidMetal)
+      if (w.setBloom) w.setBloom(false)
+      if (w.setLumen) w.setLumen(false)
+      if (w.setTwist) w.setTwist(false)
       w.setColorOpacities([1, 1, 1, 1])
       const rgbColors = p.colors.map(hex => [
         parseInt(hex.slice(1, 3), 16) / 255,
@@ -350,6 +364,9 @@ export default function Hero({ activePreset, onPresetApplied }) {
     setSplitFill(p.splitFill)
     setGlass(p.glass)
     setLiquidMetal(p.liquidMetal)
+    setBloom(false)
+    setLumen(false)
+    setTwist(false)
     setCustomColors(p.colors)
     userPickedTheme.current = true
     setCurrentTheme('custom')
@@ -407,8 +424,11 @@ export default function Hero({ activePreset, onPresetApplied }) {
     w.setSplitFill(splitFill)
     w.setGlass(glass)
     w.setLiquidMetal(liquidMetal)
+    if (w.setBloom) w.setBloom(bloom)
+    if (w.setLumen) w.setLumen(lumen)
+    if (w.setTwist) w.setTwist(twist)
     w.setColorOpacities(colorOpacities)
-  }, [params, splitFill, glass, liquidMetal, colorOpacities])
+  }, [params, splitFill, glass, liquidMetal, bloom, lumen, twist, colorOpacities])
 
   // Sync theme/colors — always use our COLOR_THEMES (with #000000 bg)
   useEffect(() => {
@@ -464,6 +484,9 @@ export default function Hero({ activePreset, onPresetApplied }) {
     w.setSplitFill(activePreset.splitFill)
     w.setGlass(activePreset.glass)
     w.setLiquidMetal(activePreset.liquidMetal)
+    if (w.setBloom) w.setBloom(!!activePreset.bloom)
+    if (w.setLumen) w.setLumen(!!activePreset.lumen)
+    if (w.setTwist) w.setTwist(!!activePreset.twist)
     w.setColorOpacities([1, 1, 1, 1])
 
     // 3. Set colors immediately (no animation)
@@ -481,6 +504,9 @@ export default function Hero({ activePreset, onPresetApplied }) {
     setSplitFill(activePreset.splitFill)
     setGlass(activePreset.glass)
     setLiquidMetal(activePreset.liquidMetal)
+    setBloom(!!activePreset.bloom)
+    setLumen(!!activePreset.lumen)
+    setTwist(!!activePreset.twist)
     setColorOpacities([1, 1, 1, 1])
     setCustomColors(activePreset.colors)
     userPickedTheme.current = true
@@ -502,6 +528,39 @@ export default function Hero({ activePreset, onPresetApplied }) {
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+
+  // --- Renderer capability map ---
+  // Which param keys + toggles each renderer actually consumes. Anything not
+  // here is dimmed/disabled so the user can't futilely drag a slider that
+  // the current renderer ignores.
+  const CANVAS2D_PARAMS = new Set([
+    'waveCount','speed','amplitude','frequency','opacity','thickness',
+    'concentration','randomness','verticalOffset','rotation',
+  ])
+  const CANVAS2D_TOGGLES = new Set(['splitFill'])
+  const isParamSupported = (key) => {
+    if (renderMode === 'webgl2') return true
+    if (renderMode === 'canvas2d') return CANVAS2D_PARAMS.has(key)
+    return false   // css, none
+  }
+  const isToggleSupported = (key) => {
+    if (renderMode === 'webgl2') return true
+    if (renderMode === 'canvas2d') return CANVAS2D_TOGGLES.has(key)
+    return false   // css, none
+  }
+  const rendererHint = renderMode === 'canvas2d'
+    ? 'Not supported in Canvas 2D'
+    : renderMode === 'css'
+      ? 'Not supported in CSS (static gradient)'
+      : renderMode === 'none'
+        ? 'Not supported in None (solid color)'
+        : ''
+
+  // Toggle handlers — preserve user params; only flip the flag. Bloom/Lumen
+  // toggles are themselves disabled on Canvas 2D / CSS / None, so we don't
+  // need to auto-switch the renderer here.
+  const handleBloomToggle = (v) => setBloom(v)
+  const handleLumenToggle = (v) => setLumen(v)
 
   return (
     <>
@@ -579,7 +638,7 @@ export default function Hero({ activePreset, onPresetApplied }) {
             <span className="hidden sm:inline text-white/20">|</span>
             <span className="flex items-center gap-2"><Gauge size={14} /> 60fps</span>
             <span className="hidden sm:inline text-white/20">|</span>
-            <span className="flex items-center gap-2"><FileZip size={14} /> ~7kb gzip</span>
+            <span className="flex items-center gap-2"><FileZip size={14} /> ~11kb gzip</span>
             <span className="hidden sm:inline text-white/20">|</span>
             <span className="flex items-center gap-2"><Package size={14} /> Zero Deps</span>
           </div>
@@ -656,7 +715,13 @@ export default function Hero({ activePreset, onPresetApplied }) {
 
             {/* 12 Sliders */}
             {SLIDER_DEFS.map(s => (
-              <ParamSlider key={s.key} label={s.label} value={params[s.key]} min={s.min} max={s.max} step={s.step} onChange={v => setParam(s.key, v)} />
+              <ParamSlider
+                key={s.key} label={s.label} value={params[s.key]}
+                min={s.min} max={s.max} step={s.step}
+                onChange={v => setParam(s.key, v)}
+                disabled={!isParamSupported(s.key)}
+                disabledHint={rendererHint}
+              />
             ))}
 
             {/* Color Theme */}
@@ -703,15 +768,55 @@ export default function Hero({ activePreset, onPresetApplied }) {
 
             {/* Toggles */}
             <div className="border-t border-white/5 pt-2 space-y-1.5">
-              <Toggle label="Split Fill" value={splitFill} onToggle={setSplitFill} />
-              <Toggle label="Glass" value={glass} onToggle={setGlass} />
-              <Toggle label="Liquid Metal" value={liquidMetal} onToggle={setLiquidMetal} />
+              <Toggle
+                label="Split Fill" value={splitFill} onToggle={setSplitFill}
+                disabled={!isToggleSupported('splitFill') || lumen}
+                disabledHint={lumen ? 'Disabled in Lumen mode' : rendererHint}
+              />
+              <Toggle
+                label="Glass" value={glass} onToggle={setGlass}
+                disabled={!isToggleSupported('glass') || lumen}
+                disabledHint={lumen ? 'Disabled in Lumen mode' : rendererHint}
+              />
+              <Toggle
+                label="Liquid Metal" value={liquidMetal} onToggle={setLiquidMetal}
+                disabled={!isToggleSupported('liquidMetal') || lumen}
+                disabledHint={lumen ? 'Disabled in Lumen mode' : rendererHint}
+              />
+              <Toggle
+                label="Bloom" value={bloom} onToggle={handleBloomToggle}
+                disabled={renderMode !== 'webgl2'} disabledHint={rendererHint}
+              />
+              <Toggle
+                label="Lumen" value={lumen} onToggle={handleLumenToggle}
+                disabled={renderMode !== 'webgl2'} disabledHint={rendererHint}
+              />
+              <Toggle
+                label="Twist" value={twist} onToggle={setTwist}
+                disabled={renderMode !== 'webgl2' || lumen}
+                disabledHint={lumen ? 'Disabled in Lumen mode' : rendererHint}
+              />
             </div>
 
             {/* Conditional Liquify */}
-            {liquidMetal && (
+            {liquidMetal && !lumen && isToggleSupported('liquidMetal') && (
               <div className="pl-2 border-l-2 border-white/10">
                 <ParamSlider label="Liquify" value={params.lmLiquid} min={0} max={0.2} step={0.001} onChange={v => setParam('lmLiquid', v)} />
+              </div>
+            )}
+
+            {/* Bloom sub-sliders */}
+            {bloom && renderMode === 'webgl2' && (
+              <div className="pl-2 border-l-2 border-white/10 space-y-2">
+                <ParamSlider label="Bloom Threshold" value={params.bloomThreshold} min={0} max={1} step={0.01} onChange={v => setParam('bloomThreshold', v)} />
+                <ParamSlider label="Bloom Intensity" value={params.bloomIntensity} min={0} max={3} step={0.01} onChange={v => setParam('bloomIntensity', v)} />
+              </div>
+            )}
+
+            {/* Twist sub-slider */}
+            {twist && !lumen && renderMode === 'webgl2' && (
+              <div className="pl-2 border-l-2 border-white/10">
+                <ParamSlider label="Twist Amount" value={params.twistAmount} min={0} max={1} step={0.01} onChange={v => setParam('twistAmount', v)} />
               </div>
             )}
 

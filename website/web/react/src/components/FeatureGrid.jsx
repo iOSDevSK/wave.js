@@ -6,7 +6,7 @@ const features = [
   {
     icon: Package,
     title: 'Zero Dependencies',
-    desc: 'Written in pure WebGL and vanilla JS. ~7kb gzipped, zero external libraries. No bloat, just waves.',
+    desc: 'Written in pure WebGL and vanilla JS. ~11kb gzipped, zero external libraries. No bloat, just waves.',
     color: 'teal',
     pattern: { y: 16, squares: [[0, 1], [1, 3]] },
   },
