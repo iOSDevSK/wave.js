@@ -31,6 +31,7 @@ uniform float u_verticalOffset;
 uniform float u_rotation;
 uniform float u_splitFill;
 uniform float u_lumen;
+uniform float u_lumenIntensity;
 uniform float u_twist;
 uniform float u_twistAmount;
 #ifdef HAS_GLASS
@@ -161,9 +162,11 @@ vec3 lumenRender(vec2 uv, float aspect, float t) {
     //   haze (wide, low)   -> atmospheric color mist
     //   body (mid, colored)-> visible ribbon band
     //   core (thin, bright)-> razor specular + bloom source
-    col += hue * haze * u_opacity * colA * 0.10;
-    col += hue * body * u_opacity * colA * 0.95;
-    col += mix(hue, vec3(1.0), 0.08) * core * u_opacity * 1.4;
+    // u_lumenIntensity scales all three uniformly — dims ribbons or
+    // pumps the core past HDR (1.0) to drive a stronger bloom halo.
+    col += hue * haze * u_opacity * colA * 0.10 * u_lumenIntensity;
+    col += hue * body * u_opacity * colA * 0.95 * u_lumenIntensity;
+    col += mix(hue, vec3(1.0), 0.08) * core * u_opacity * 1.4 * u_lumenIntensity;
   }
 
   return col;

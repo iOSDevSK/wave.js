@@ -156,6 +156,7 @@ Creates an animated wave background in the given container.
 | `bloomThreshold` | `0.6` | Luminance above which bloom kicks in (0–1) |
 | `bloomIntensity` | `1.4` | Bloom halo strength (0–3) |
 | `lumen` | `false` | Glowing-ribbon render mode (WebGL only) |
+| `lumenIntensity` | `1` | Lumen brightness multiplier (0–2). >1 drives a stronger bloom halo. |
 | `twist` | `false` | 3D chrome/glass twisted-ribbon effect (WebGL only) |
 | `twistAmount` | `1` | Twist intensity (0–1) |
 | `colors` | — | Explicit 4-hex-color array. Overrides `theme`. |

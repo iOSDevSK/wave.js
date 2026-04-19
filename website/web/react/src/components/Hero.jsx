@@ -36,6 +36,7 @@ const DEFAULTS = {
   randomness: 0, thicknessRandom: 0, verticalOffset: 0, rotation: 0,
   lmLiquid: 0.07,
   bloomThreshold: 0.85, bloomIntensity: 1.7,
+  lumenIntensity: 1,
   twistAmount: 1,
 }
 
@@ -863,6 +864,13 @@ export default function Hero({ activePreset, onPresetApplied }) {
               <div className="pl-2 border-l-2 border-white/10 space-y-2">
                 <ParamSlider label="Bloom Threshold" value={params.bloomThreshold} min={0} max={1} step={0.01} onChange={v => setParam('bloomThreshold', v)} />
                 <ParamSlider label="Bloom Intensity" value={params.bloomIntensity} min={0} max={3} step={0.01} onChange={v => setParam('bloomIntensity', v)} />
+              </div>
+            )}
+
+            {/* Lumen sub-slider */}
+            {lumen && renderMode === 'webgl2' && (
+              <div className="pl-2 border-l-2 border-white/10">
+                <ParamSlider label="Lumen Intensity" value={params.lumenIntensity} min={0} max={2} step={0.01} onChange={v => setParam('lumenIntensity', v)} />
               </div>
             )}
 

@@ -83,6 +83,7 @@ The first argument is a CSS selector string or DOM element. The second is an opt
 | `bloomThreshold` | `number` | `0.6` | Luminance threshold above which bloom kicks in (0–1) |
 | `bloomIntensity` | `number` | `1.4` | Bloom halo strength (0–3) |
 | `lumen` | `boolean` | `false` | Glowing-ribbon render mode (WebGL only) |
+| `lumenIntensity` | `number` | `1` | Lumen brightness multiplier (0–2). >1 drives a stronger bloom halo. |
 | `twist` | `boolean` | `false` | 3D chrome/glass twisted-ribbon effect (WebGL only) |
 | `twistAmount` | `number` | `1` | Twist intensity (0–1) |
 | `colors` | `string[]` | — | 4 hex colors. Overrides `theme`. |

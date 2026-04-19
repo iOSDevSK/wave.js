@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.3.0 — 2026-04-19
+
+Lumen intensity control + JSON-driven configuration.
+
+### Added
+- **Lumen Intensity** (`lumenIntensity`, range 0–2, default 1). Single slider that scales the three Lumen additive layers (haze, body, core) uniformly. Values > 1 push the core past HDR (1.0) and drive a stronger bloom halo; values < 1 dim the whole effect. Exposed in the playground under the Lumen toggle when Lumen is on.
+- **`toJSON()`** method on `WaveBackground`. Returns the full current settings as a plain object (same shape as the constructor options), so `new WaveBackground(el, wave.toJSON())` reproduces the look.
+- **`setConfig(obj)`** method on `WaveBackground`. Apply a settings object at runtime — mirrors what the constructor accepts, so playground-exported JSON drops in live.
+- Constructor now accepts an explicit **`colors`** option (4-hex array) that overrides `theme`. Required so exported JSON configs carry exact colors without depending on theme names.
+- **Copy JSON** button in the playground's Parameters panel — serializes current state to the clipboard as pretty-printed JSON ready for the constructor.
+- New examples: `examples/vanilla/from-json.html` + `config.json`, and `examples/react/src/AppFromJson.jsx` + `config.json`. Demonstrate the JSON-driven flow alongside the existing inline-options flow.
+
+### Changed
+- Parameters panel scroll arrows (desktop XL+) are now always visible when the panel overflows — not only on initial overflow detection. Arrows dim + disable at the matching edge of scroll and update live as toggles change panel height.
+
+### Docs
+- README + DOCS gain a JSON Config section with inline-vs-JSON trade-offs, `setConfig` semantics, and links to the example files. Every effect (`bloom` / `lumen` / `lumenIntensity` / `twist` + `colors`, `colorOpacities`) is listed in the options tables.
+
 ## 1.2.0 — 2026-04-19
 
 New **Twist** effect and default bloom tuning.

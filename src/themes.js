@@ -27,6 +27,7 @@ export const DEFAULTS = {
   lmLiquid: 0.07,
   bloomThreshold: 0.6,
   bloomIntensity: 1.4,
+  lumenIntensity: 1,
   twistAmount: 1,
 }
 

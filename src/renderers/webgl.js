@@ -12,7 +12,8 @@ const UNIFORM_NAMES = [
   'u_mouse', 'u_waveCount', 'u_speed', 'u_amplitude', 'u_frequency',
   'u_opacity', 'u_thickness', 'u_blur', 'u_concentration',
   'u_randomness', 'u_thicknessRandom', 'u_verticalOffset', 'u_rotation',
-  'u_splitFill', 'u_lumen', 'u_twist', 'u_twistAmount',
+  'u_splitFill', 'u_lumen', 'u_lumenIntensity',
+  'u_twist', 'u_twistAmount',
   'u_glass', 'u_liquidMetal', 'u_lmLiquid',
 ]
 
@@ -347,6 +348,7 @@ export class WebGLRenderer {
     gl.uniform1f(l.u_rotation, s.params.rotation * Math.PI / 180)
     gl.uniform1f(l.u_splitFill, s.splitFill ? 1 : 0)
     gl.uniform1f(l.u_lumen, s.lumen ? 1 : 0)
+    gl.uniform1f(l.u_lumenIntensity, s.params.lumenIntensity ?? 1)
     gl.uniform1f(l.u_twist, s.twist ? 1 : 0)
     gl.uniform1f(l.u_twistAmount, s.params.twistAmount ?? 1)
     if (this.features.glass) gl.uniform1f(l.u_glass, s.glass ? 1 : 0)

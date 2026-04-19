@@ -40,7 +40,7 @@ export default function Navbar() {
 
         <div className="flex items-center gap-3">
           <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium tracking-wide bg-white/5 border border-white/10 text-zinc-300">
-            v1.2.0
+            v1.3.0
           </span>
           <a
             href="https://github.com/iOSDevSK/wave.js"

@@ -18,6 +18,7 @@
   "lmLiquid": 0.07,
   "bloomThreshold": 0.6,
   "bloomIntensity": 1.05,
+  "lumenIntensity": 1.2,
   "twistAmount": 1,
   "splitFill": false,
   "glass": false,
